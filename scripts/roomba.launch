@@ -1,0 +1,8 @@
+<launch>
+  <node name="battery_manager" pkg="saviRoomba" type="battery_manager.py" />
+  <node name="actionDecoder" pkg="saviRoomba" type="actionDecoder.py" />
+  <!-- <node name="appReceiver" pkg="saviRoomba" type="app_receiver.py" /> -->
+  <node name="liner" pkg="saviRoomba" type="liner.py" />
+  <node name="logger" pkg="saviRoomba" type="logger.py" />
+  <node name="qrscanner" pkg="saviRoomba" type="qrscanner.py" />
+</launch>
