@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(savi_ros_demo)
+project(saviRoombaDebugger)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
