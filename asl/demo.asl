@@ -126,16 +126,16 @@ atDestination :-
 	(destination(DESTINATION) & postPoint(DESTINATION,_)) | direction(arrived).
 
 // Destination is the previously seen post point
-DestinationBehind :-
+destinationBehind :-
 	(destinaton(DESTINATION) & postPoint(_,DESTINATION)) | direction(behind).
 
-DestinationAhead :- 
+destinationAhead :- 
 	direction(forward).
 	
-DestinationRight :-
+destinationRight :-
 	direction(right).
 	
-DestinationLeft :-
+destinationLeft :-
 	direction(left).
 */
 
@@ -275,8 +275,8 @@ DestinationLeft :-
 	:	battery(low) & dockStation(DOCK) & dest(DEST) & (not (DOCK = DEST) & 
 		not postPoint(DOCK,_))
 	<-	!setDestination(DOCK); 
-		+!goToLocation;
-		+!chargeBattery.
+		!goToLocation;
+		!chargeBattery.
 		
 // We are at the station, dock to charge the battery
 +!chargeBattery
@@ -284,19 +284,19 @@ DestinationLeft :-
 	<-	drive(stop);
 		station(dock);
 		.broadcast(tell, battery(charging));
-		+!chargeBattery.
+		!chargeBattery.
 		
 // We are at the station, charging is done, undock
 +!chargeBattery
 	: 	battery(full)
-		.broadcast(tell, battery(charged));
-	<-	station(undock).
+	<-	.broadcast(tell, battery(charged));
+		station(undock).
 		
 /**
  * Set the destination of the robot
  */
 +!setDestination(DESTINATION)
 	<-	-destination(_);
-		+destination(DESTINATION);
+		+destination(DESTINATION).
 		//setDestination(DESTINATION).	// Used with new navigation module only
     
