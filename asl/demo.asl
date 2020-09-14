@@ -271,7 +271,7 @@ destinationLeft :-
 +!followPath
 	:	line(lost)
 	<-	do(13);
-		drive(stop).
+		drive(spiral).
 
 // Handle cases for left and right turns.
 +!followPath
