@@ -158,9 +158,10 @@ destinationLeft :-
  	: 	((not haveMail) &
 		senderLocation(SENDER) &
 		receiverLocation(RECEIVER) &
-		not postPoint(SENDER,_) &
+		(not postPoint(SENDER,_)) &
 		battery(ok))
-	<- 	!setDestination(SENDER);
+	<- 	do(1);
+		setDestination(SENDER);
 		!goToLocation;
 		!deliverMail.
 		
@@ -173,7 +174,8 @@ destinationLeft :-
 		receiverLocation(RECEIVER) &
 		postPoint(SENDER,_) & 
 		battery(ok))
-	<- 	+haveMail;
+	<- 	do(2);
+		+haveMail;
 		.broadcast(tell, mailUpdate(collected));
 		!deliverMail.
  
@@ -183,7 +185,8 @@ destinationLeft :-
 		receiverLocation(RECEIVER) &
 		not postPoint(RECEIVER,_) &
 		battery(ok))
-	<- 	!setDestination(RECEIVER);
+	<- 	do(3);
+		!setDestination(RECEIVER);
 		!goToLocation;
 		!deliverMail.
 		
@@ -193,7 +196,8 @@ destinationLeft :-
 		receiverLocation(RECEIVER) &
 		postPoint(RECEIVER,_) &
 		battery(ok))
-	<- 	-haveMail;
+	<- 	do(4);
+		-haveMail;
 		.broadcast(tell, mailUpdate(delivered));
 		!deliverMail.
 
@@ -201,7 +205,8 @@ destinationLeft :-
  +!deliverMail
  	: 	(battery(low) &
 		dockStation(DOCK))	
-	<-	!chargeBattery;
+	<-	do(5);
+		!chargeBattery;
 		//-destination(_);
 		//+destination(DOCK);
 		//!dock;
@@ -209,7 +214,8 @@ destinationLeft :-
 		
 // Catchall (suspect that this should not be needed)
 +!deliverMail
-	<-	!deliverMail.
+	<-	do(6);
+		!deliverMail.
 
 /** 
  * goToLocation
@@ -218,28 +224,34 @@ destinationLeft :-
  */
 +!goToLocation
 	:	destinationAhead
-	<-	!followPath.
+	<-	do(7);
+		!followPath.
 
 +!goToLocation
 	:	atDestination
-	<-	drive(stop).
+	<-	do(8);
+		drive(stop).
 	
 +!goToLocation
 	:	destinationLeft	// TODO: Update to use unification for left, right, behind?
-	<-	turn(left);	// TODO: This (or something similar) needs to be implementd
+	<-	do(9);
+		turn(left);	// TODO: This (or something similar) needs to be implementd
 		!followPath.
 		
 +!goToLocation
 	:	destinationRight	// TODO: Update to use unification for left, right, behind?
-	<-	turn(right);		// TODO: This (or something similar) needs to be implementd
+	<-	do(9);
+		turn(right);		// TODO: This (or something similar) needs to be implementd
 		!followPath.
 	
 +!goToLocation
 	:	destinationBehind	// TODO: Update to use unification for left, right, behind?
-	<-	turn(left);		// TODO: This (or something similar) needs to be implementd
+	<-	do(10);
+		turn(left);		// TODO: This (or something similar) needs to be implementd
 		!followPath.
 
-+!goToLocation.
++!goToLocation
+	<-	do(11).
 
 
 /** 
@@ -252,18 +264,25 @@ destinationLeft :-
  // drive() action, or the script that generates the line() message (of both)
 +!followPath
 	:	line(center)
-	<-	drive(forward);
+	<-	do(12);
+		drive(forward);
 		!followPath.
 		
 +!followPath
 	:	line(lost)
-	<-	drive(stop).
+	<-	do(13);
+		drive(stop).
 
 // Handle cases for left and right turns.
 +!followPath
 	:	line(DIRECTION)
-	<-	drive(DIRECTION);
+	<-	do(14);
+		drive(DIRECTION);
 		!followPath.
+		
+// Default follow path. try again if it didn't work
++!followPath
+	<- !followPath.
 		
 /**
  * chargeBattery
@@ -274,14 +293,16 @@ destinationLeft :-
 +!chargeBattery
 	:	battery(low) & dockStation(DOCK) & dest(DEST) & (not (DOCK = DEST) & 
 		not postPoint(DOCK,_))
-	<-	!setDestination(DOCK); 
+	<-	do(15);
+		!setDestination(DOCK); 
 		!goToLocation;
 		!chargeBattery.
 		
 // We are at the station, dock to charge the battery
 +!chargeBattery
 	: 	battery(low) & dockStation(DOCK) & postPoint(DOCK,_)
-	<-	drive(stop);
+	<-	do(16);
+		drive(stop);
 		station(dock);
 		.broadcast(tell, battery(charging));
 		!chargeBattery.
@@ -289,14 +310,20 @@ destinationLeft :-
 // We are at the station, charging is done, undock
 +!chargeBattery
 	: 	battery(full)
-	<-	.broadcast(tell, battery(charged));
+	<-	do(17);
+		.broadcast(tell, battery(charged));
 		station(undock).
+		
+// Default, in case things go wrong
++!chargeBattery
+	<-	!chargeBattery.
 		
 /**
  * Set the destination of the robot
  */
 +!setDestination(DESTINATION)
-	<-	-destination(_);
+	<-	do(18);
+		-destination(_);
 		+destination(DESTINATION).
 		//setDestination(DESTINATION).	// Used with new navigation module only
     
