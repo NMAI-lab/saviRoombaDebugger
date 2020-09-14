@@ -18,7 +18,7 @@ GPIO.setup(left_sensor, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 
 # Get the sesor data
-def get_line():
+def getLine():
     centerLED = GPIO.input(center_sensor)
     leftLED = GPIO.input(left_sensor)
     rightLED = GPIO.input(right_sensor)
@@ -49,7 +49,7 @@ def rosMain():
     while not rospy.is_shutdown():
         
         # Get the sensor data
-        (linePosition, LEDs) = get_line()
+        (linePosition, LEDs) = getLine()
         rospy.loginfo("Line sensor data: " + str(linePosition) + ", " + str(LEDs))
         pub.publish(linePosition)
         rate.sleep()
