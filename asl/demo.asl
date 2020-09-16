@@ -316,7 +316,8 @@ destinationLeft :-
 		
 // Default, in case things go wrong
 +!chargeBattery
-	<-	!chargeBattery.
+	<-	do(19);
+		!chargeBattery.
 		
 /**
  * Set the destination of the robot
@@ -326,4 +327,3 @@ destinationLeft :-
 		-destination(_);
 		+destination(DESTINATION).
 		//setDestination(DESTINATION).	// Used with new navigation module only
-    
