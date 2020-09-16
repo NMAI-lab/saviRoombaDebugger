@@ -52,20 +52,20 @@ class VirtualBot:
 
     # Implementation of the drive action
     def drive(self, parameter):
-        if self.docked() == False:
+        if self.docked == False:
             rospy.loginfo("I need to drive: " + str(parameter))
             if parameter == "forward":
                 self.updatePosition()
             else:
-                self.updateLine()
+                self.updateLine(parameter)
         else: 
             rospy.loginfo("I can't drive, I'm docked!")
         
     # Implementation of the turn action
     # Similar to drive action but continues until the line sensor detects "c"
     def turn(self, parameter):
-        if self.docked() == False:
-            rospy.loginfo("I need to turn: " + str(parameter))
+        if self.docked == False:
+            rospy.loginfo("************* I need to turn: " + str(parameter))
             
             # If the bot does turn(left) or turn(right), adjust the direction accordingly
             self.lineIndex = self.lineValues.index("c")

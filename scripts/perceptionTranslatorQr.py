@@ -4,8 +4,8 @@ import rospy
 from std_msgs.msg import String
     
 # Global variables to remember current and previous qr codes
-previous = -1
-current = -1
+previous = "unknown"
+current = "unknown"
 
 # Translate the line sensor data into a perception and publish
 def translatePerception(data, args):

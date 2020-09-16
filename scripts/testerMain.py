@@ -49,17 +49,18 @@ def testerMain():
         
         # Publish the line data
         line = bot.perceiveLine()
-        rospy.loginfo("Line data: " + line)
+        #rospy.loginfo("Line data: " + line)
         linePublisher.publish(line)
         
         # QR perception
         qr = bot.perceiveQR()
-        rospy.loginfo("QR data: " + qr)
-        qrPublisher.publish(qr)
+        if qr != -1:
+            #rospy.loginfo("QR data: " + qr)
+            qrPublisher.publish(qr)
         
         # Battery perception
         battery = bot.perceiveBattery()
-        rospy.loginfo("Battery data: " + str(battery))
+        #rospy.loginfo("Battery data: " + str(battery))
         batteryPublisher.publish(battery)
         
         # Publish the inbox message
