@@ -13,10 +13,12 @@ import random
 class VirtualBot:
     def __init__(self):
         self.lineValues = ["ll","l","c","r"]    # Treat this as a circular list
-        self.lineIndex = 2                      # Index of the circular list
-        self.position = (1,1)
-        self.qr = "post1"
-        self.direction = (1,1)
+        self.lineIndex = self.lineValues.index("c")  # Index of the circular list
+        self.position = 1
+        self.postPointIndex = 0
+        self.postPoints = ["post1", "post2", "post3", "post4", "post5"]
+        self.movementCount = 0
+        self.directionOK = True # Update this later to be based on geometry
         self.battery = 95
         self.docked = False
         
@@ -43,27 +45,19 @@ class VirtualBot:
         # Deal with invalid action
         else:
             rospy.loginfo("Invalid action ignored")
-            
         
         # Update battery
         self.updateBattery()
 
 
-        ##### Every action results in an update of the line, position, and battery
-        
-        # If the bot is doing drive(left) or drive(right), adjust the line accordingly
- 
-        # If the bot does turn(left) or turn(right), adjust the direction accordingly
-        
-        # If the bot does drive(forward) or drive(stop), adjust the position 
-        # occordingly and update the QR codes
-
-        
-
     # Implementation of the drive action
     def drive(self, parameter):
         if self.docked() == False:
             rospy.loginfo("I need to drive: " + str(parameter))
+            if parameter == "forward":
+                self.updatePosition()
+            else:
+                self.updateLine()
         else: 
             rospy.loginfo("I can't drive, I'm docked!")
         
@@ -72,6 +66,10 @@ class VirtualBot:
     def turn(self, parameter):
         if self.docked() == False:
             rospy.loginfo("I need to turn: " + str(parameter))
+            
+            # If the bot does turn(left) or turn(right), adjust the direction accordingly
+            self.lineIndex = self.lineValues.index("c")
+
         else:
             rospy.loginfo("I can't turn, I'm docked!")
         
@@ -88,9 +86,19 @@ class VirtualBot:
         
         rospy.loginfo("Robot is undocked")
         
-    
-    def updatePosition(self, movement):
-        rospy.loginfo("Need to implement movement method")
+        
+    # This is a hack! Need to update to reflect geometry of the map
+    # Basically, this implements the drive(forward) action
+    def updatePosition(self):
+        if self.perceiveLine() == "c":
+            if self.movementCount > 4:
+                self.movementCount = 0
+                self.postPointIndex += 1
+            else: 
+                self.movementCount += 1
+        else:
+            self.lineIndex = self.lineValues.index("ll")                    
+
         
     # Update the line sensor data
     # Perhaps later on (not initially) add some randomness to the line 
@@ -123,7 +131,10 @@ class VirtualBot:
     
     # Sense the qr state data
     def perceiveQR(self):
-        return self.qr
+        if self.movementCount == 0:
+            return self.postPoints[self.postPointIndex]
+        else:
+            return -1
 
     # Sense the battery state data
     def perceiveBattery(self):
