@@ -211,11 +211,7 @@ destinationLeft :-
 		//+destination(DOCK);
 		//!dock;
 //		!deliverMail.
-		
-// Catchall (suspect that this should not be needed)
-+!deliverMail
-	<-	do(5);
-		!deliverMail.
+
 
 /** 
  * goToLocation
@@ -255,12 +251,6 @@ destinationLeft :-
 		!followPath;
 		!goToLocation.
 
-+!goToLocation
-	<-	do(11);
-		!goToLocation
-		!followPath.
-
-
 /** 
  * followPath
  * Follow the line.
@@ -288,9 +278,6 @@ destinationLeft :-
 	<-	do(14);
 		drive(DIRECTION).
 		
-// Default follow path. try again if it didn't work
-+!followPath
-	<- 	do(15).
 		
 /**
  * manageBattery
@@ -322,11 +309,7 @@ destinationLeft :-
 		.broadcast(tell, battery(charged));
 		station(undock);
 		!manageBattery.
-		
-// Default, in case things go wrong
-+!manageBattery
-	<-	do(19);
-		!manageBattery.
+
 		
 /**
  * Set the destination of the robot
@@ -337,3 +320,23 @@ destinationLeft :-
 		+destination(DESTINATION);
 		setDestination(DESTINATION).	// Used with new navigation module only
 		
+		
+/**
+ * Default plans, in case things go wrong.
+ */
++!deliverMail
+	<-	do(5);
+		!deliverMail.
+		
++!goToLocation
+	<-	do(11);
+		!followPath;
+		!goToLocation.
+		
+// Default follow path. try again if it didn't work
++!followPath
+	<- 	do(15).
+	
++!manageBattery
+	<-	do(19);
+		!manageBattery.
