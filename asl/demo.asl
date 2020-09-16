@@ -325,5 +325,5 @@ destinationLeft :-
 +!setDestination(DESTINATION)
 	<-	do(18);
 		-destination(_);
-		+destination(DESTINATION).
-		//setDestination(DESTINATION).	// Used with new navigation module only
+		+destination(DESTINATION);
+		setDestination(DESTINATION).	// Used with new navigation module only
