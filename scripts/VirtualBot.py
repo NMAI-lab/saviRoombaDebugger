@@ -25,33 +25,28 @@ class VirtualBot:
         
         # Handle the docking station cases
         if action == "station(dock)":
-            rospy.loginfo("I need to dock the bot and recharge")
+            self.dock()
         elif action == "station(undock)":
-            rospy.loginfo("I need to undock the bot and get on with my mission")
+            self.undock()
         
         # Extract the action parameter between the brackets
         parameter = re.search('\((.*)\)', action).group(1)
     
         # Deal with drive action
         if re.search("drive", action):
-            rospy.loginfo("I need to drive: " + str(parameter))
-            #message = getTwistMesg(parameter)
-            #drivePublisher.publish(message)
+            self.drive(parameter)
     
-        # Deal with turn message (similar to drive action but continues until the 
-        # line sensor detects "c")
+        # Deal with turn action
         elif re.search("turn", action):
-            rospy.loginfo("I need to turn: " + str(parameter))
-            #message = getTwistMesg(parameter)
-            #while getLine()[0] != "c":
-                #drivePublisher.publish(message)
-                #message.linear.x = 0
-                #message.angular.z = 0
-                #drivePublisher.publish(message)
+            self.turn(parameter)
     
         # Deal with invalid action
         else:
             rospy.loginfo("Invalid action ignored")
+            
+        
+        # Update battery
+        self.updateBattery()
 
 
         ##### Every action results in an update of the line, position, and battery
@@ -62,11 +57,38 @@ class VirtualBot:
         
         # If the bot does drive(forward) or drive(stop), adjust the position 
         # occordingly and update the QR codes
+
         
-        # If the action is dock or undock, figure out what to do about it
+
+    # Implementation of the drive action
+    def drive(self, parameter):
+        if self.docked() == False:
+            rospy.loginfo("I need to drive: " + str(parameter))
+        else: 
+            rospy.loginfo("I can't drive, I'm docked!")
         
-        # Have the battery reduce in charge?
-      
+    # Implementation of the turn action
+    # Similar to drive action but continues until the line sensor detects "c"
+    def turn(self, parameter):
+        if self.docked() == False:
+            rospy.loginfo("I need to turn: " + str(parameter))
+        else:
+            rospy.loginfo("I can't turn, I'm docked!")
+        
+    def dock(self):
+        # Need to add a check that the position is at the docking station
+        
+        self.docked = True
+        rospy.loginfo("Robot is docked")
+        
+    def undock(self):
+        self.docked = False
+        
+        # Need to do an update of the position and the line here
+        
+        rospy.loginfo("Robot is undocked")
+        
+    
     def updatePosition(self, movement):
         rospy.loginfo("Need to implement movement method")
         
@@ -86,8 +108,7 @@ class VirtualBot:
         elif self.lineIndex < 0:
             self.lineIndex = len(self.lineValues) - 1
  
-    
-    # To do: Figure out where to call this from
+
     # Charge and discharge the battery
     def updateBattery(self):
         if self.docked and (self.battery < 100):
@@ -95,6 +116,7 @@ class VirtualBot:
         elif (not self.docked) and (self.battery > 0):
             self.battery = self.battery - 1
        
+
     # Sense the line state data
     def perceiveLine(self):
         return self.lineValues[self.lineIndex]
