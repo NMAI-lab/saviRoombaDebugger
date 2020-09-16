@@ -10,13 +10,14 @@ from std_msgs.msg import String
 from std_msgs.msg import Float32
 from VirtualBot import VirtualBot
 
+bot = VirtualBot()      # Initialize the bot as a global (ugly but it should work)
 
-# Callback function for action messages.
-# Message is pritned to the console logs
-def actionReceiver(data): 
-    message = str(rospy.get_caller_id() + 'I heard: ' + str(data.data))
-    rospy.loginfo(message)
-
+# Callback function for actions.
+# Call the action method on the bot
+def actionReceiver(data):
+    action = data.data
+    bot.act(action)
+    
 
 # Callback function for outbox messages.
 # Message is pritned to the console logs
@@ -28,15 +29,14 @@ def outboxReceiver(data):
 # Demo program that publishes perceptions and inbox messages and listens to 
 # outbox and action messages
 def testerMain():
-    print("This is the main test function!")
-    
-    bot = VirtualBot()
+    rospy.loginfo("This is the main test function!")
+
     
     rospy.init_node('saviRoombaDebugger', anonymous=True)
     
     # Setup the subscribers
-    #rospy.Subscriber('actions', String, actionReceiver)
-    #rospy.Subscriber('outbox', String, outboxReceiver)
+    rospy.Subscriber('actions', String, actionReceiver)
+    rospy.Subscriber('outbox', String, outboxReceiver)
     
     # Setup the publishers
     #inboxPublisher = rospy.Publisher('inbox', String, queue_size=10)

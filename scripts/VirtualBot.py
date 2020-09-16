@@ -5,35 +5,88 @@
 # Created on Wed Feb 19 16:17:21 2020
 # @author: Patrick Gavigan
 
+
+import rospy
+import re
+import random
+
 class VirtualBot:
     def __init__(self):
-        self.line = "c"
+        self.lineValues = ["ll","l","c","r"]    # Treat this as a circular list
+        self.lineIndex = 2                      # Index of the circular list
         self.position = (1,1)
         self.qr = "post1"
         self.direction = (1,1)
         self.battery = 95
         self.docked = False
         
-    def act(self, actionParameter):
-        print("Update internal state based on the action here")
-        print("Action parameter was: " + actionParameter)
+    def act(self, action):
+        rospy.loginfo("Action parameter was: " + action)
+        
+        # Handle the docking station cases
+        if action == "station(dock)":
+            rospy.loginfo("I need to dock the bot and recharge")
+        elif action == "station(undock)":
+            rospy.loginfo("I need to undock the bot and get on with my mission")
+        
+        # Extract the action parameter between the brackets
+        parameter = re.search('\((.*)\)', action).group(1)
+    
+        # Deal with drive action
+        if re.search("drive", action):
+            rospy.loginfo("I need to drive: " + str(parameter))
+            #message = getTwistMesg(parameter)
+            #drivePublisher.publish(message)
+    
+        # Deal with turn message (similar to drive action but continues until the 
+        # line sensor detects "c")
+        elif re.search("turn", action):
+            rospy.loginfo("I need to turn: " + str(parameter))
+            #message = getTwistMesg(parameter)
+            #while getLine()[0] != "c":
+                #drivePublisher.publish(message)
+                #message.linear.x = 0
+                #message.angular.z = 0
+                #drivePublisher.publish(message)
+    
+        # Deal with invalid action
+        else:
+            rospy.loginfo("Invalid action ignored")
+
+
+        ##### Every action results in an update of the line, position, and battery
         
         # If the bot is doing drive(left) or drive(right), adjust the line accordingly
-        
+ 
         # If the bot does turn(left) or turn(right), adjust the direction accordingly
         
         # If the bot does drive(forward) or drive(stop), adjust the position 
-        # occordingly and updat the QR codes
+        # occordingly and update the QR codes
         
         # If the action is dock or undock, figure out what to do about it
         
-        
-        # Perhaps later on (not initially) add some randomness to the line 
-        # sensor so that sometimes the bot is slightly off the line
-        
         # Have the battery reduce in charge?
+      
+    def updatePosition(self, movement):
+        rospy.loginfo("Need to implement movement method")
         
+    # Update the line sensor data
+    # Perhaps later on (not initially) add some randomness to the line 
+    # sensor so that sometimes the bot is slightly off the line
+    def updateLine(self, direction):
+        if direction == "left":
+            self.lineIndex += 1
+        elif direction == "right":
+            self.lineIndex -= 1
+        elif direction == "sprial":
+            self.lineIndex = random.randint(0,len(self.lineValues)-1)
+            
+        if self.lineIndex >= len(self.lineValues):
+            self.lineIndex = 0
+        elif self.lineIndex < 0:
+            self.lineIndex = len(self.lineValues) - 1
  
+    
     # To do: Figure out where to call this from
     # Charge and discharge the battery
     def updateBattery(self):
@@ -42,11 +95,9 @@ class VirtualBot:
         elif (not self.docked) and (self.battery > 0):
             self.battery = self.battery - 1
        
-            
-        
     # Sense the line state data
     def perceiveLine(self):
-        return self.line
+        return self.lineValues[self.lineIndex]
     
     # Sense the qr state data
     def perceiveQR(self):
