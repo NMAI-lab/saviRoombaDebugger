@@ -33,13 +33,13 @@ def sendCommand(publisher, senderLocation, receiverLocation):
 
 # Receive outbox messages. Just print everything.
 def receiveMessage(data):
-    print("Received message: " + str(data.data))
+    rospy.loginfo("Received message: " + str(data.data))
     # ToDo: Send this to a phone app
     
     # Check if the message contains the delivered signal
     if "mailUpdate(delivered)" in data.data:
         endTime = datetime.now()
-        print("Mission complete at " + str(endTime))
+        rospy.loginfo("Mission complete at " + str(endTime))
 
 # Main program
 def rosMain():
@@ -56,11 +56,14 @@ def rosMain():
     # Sleep for 5 seconds, give everything a chance to come online.
     time.sleep(5)
 
-    # Send the message (To Do: Switch this to use keyboard input or receive 
-    # from a phone app)
-    sendCommand(publisher, "post1", "post4")
+    # Prompt the use for input
+    sender = input("Please enter the sender's location (Example: post1): ")
+    receiver = input("Please enter the receiver's location (Example: post4): ")
+
+    # Send the message    
+    sendCommand(publisher, sender, receiver)
     startTime = datetime.now()
-    print("Command sent at " + str(startTime))
+    rospy.loginfo("Command sent at " + str(startTime))
     
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
