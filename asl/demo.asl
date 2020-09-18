@@ -8,8 +8,8 @@
  * Main beliefs for the robot
  * Mission is hard coded for now (need to update this)
  */
-senderLocation(post1).		// The location of the mail sender
-receiverLocation(post4).	// The location of the mail receiver
+//senderLocation(post1).		// The location of the mail sender
+//receiverLocation(post4).	// The location of the mail receiver
 dockStation(post5).			// The location of the docking station
 
 /**
