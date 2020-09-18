@@ -12,24 +12,21 @@ from datetime import datetime
 startTime = 0
 endTime = 0
 
-def sendCommand(publisher, senderLocation, receiverLocation):
-    
+def sendMessageFromUser(publisher, informationType):
     messageID = int(round(time.time() * 1000))  # Crude message ID
     agentID = "BROADCAST"
     userID = "user"
     messageType = "tell"
+
+    # Prompt user for input (using Pyton 7 method, ROS does not use Python 3)
+    parameter = raw_input("Please enter the " + informationType + " (Example: post1): ")
     
-    senderParameter = "senderLocation(" + str(senderLocation) + ")"
-    receiverParameter = "receiverLocation(" + str(receiverLocation) + ")"
-    
-    senderMessage = "<" + str(messageID) + "," + userID + "," + messageType + "," + agentID + "," + senderParameter + ">"
-    receiverMessage = "<" + str(messageID+1) + "," + userID + "," + messageType + "," + agentID + "," + receiverParameter + ">"
-    
-    rospy.loginfo("Sender message: " + str(senderMessage))
-    rospy.loginfo("Receiver message: " + str(receiverMessage))  
-    
-    publisher.publish(senderMessage)
-    publisher.publish(receiverMessage)
+    # Build message, log and send it
+    messageContent = informationType + "(" + str(parameter) + ")"
+    message = "<" + str(messageID) + "," + userID + "," + messageType + "," + agentID + "," + messageContent + ">"
+    rospy.loginfo("Sending message: " + str(message))
+    publisher.publish(message)
+
 
 # Receive outbox messages. Just print everything.
 def receiveMessage(data):
@@ -43,7 +40,7 @@ def receiveMessage(data):
 
 # Main program
 def rosMain():
-    
+
     # Init the node
     rospy.init_node('user', anonymous=True)
 
@@ -56,14 +53,11 @@ def rosMain():
     # Sleep for 5 seconds, give everything a chance to come online.
     time.sleep(5)
 
-    # Prompt the use for input
-    sender = input("Please enter the sender's location (Example: post1): ")
-    receiver = input("Please enter the receiver's location (Example: post4): ")
-
-    # Send the message    
-    sendCommand(publisher, sender, receiver)
-    startTime = datetime.now()
-    rospy.loginfo("Command sent at " + str(startTime))
+    # Prompt the use for the sender location and send it
+    sendMessageFromUser(publisher, "senderLocation")
+    
+    # Prompt the use for the receiver location and send it
+    sendMessageFromUser(publisher, "receiverLocation")
     
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
