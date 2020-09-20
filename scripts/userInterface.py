@@ -12,17 +12,18 @@ from datetime import datetime
 startTime = 0
 endTime = 0
 
-def sendMessageFromUser(publisher, informationType):
+def sendMailMission(publisher):
     messageID = int(round(time.time() * 1000))  # Crude message ID
     agentID = "BROADCAST"
     userID = "user"
     messageType = "tell"
 
     # Prompt user for input (using Pyton 7 method, ROS does not use Python 3)
-    parameter = raw_input("Please enter the " + informationType + " (Example: post1): ")
+    sender = raw_input("Please enter the sender location (Example: post1): ")
+    receiver = raw_input("Please enter the receiver location (Example: post1): ")
     
     # Build message, log and send it
-    messageContent = informationType + "(" + str(parameter) + ")"
+    messageContent = "mailMission(" + str(sender) + "," + str(receiver) + ")"
     message = "<" + str(messageID) + "," + userID + "," + messageType + "," + agentID + "," + messageContent + ">"
     rospy.loginfo("Sending message: " + str(message))
     publisher.publish(message)
@@ -53,11 +54,8 @@ def rosMain():
     # Sleep for 5 seconds, give everything a chance to come online.
     time.sleep(5)
 
-    # Prompt the use for the sender location and send it
-    sendMessageFromUser(publisher, "senderLocation")
-    
-    # Prompt the use for the receiver location and send it
-    sendMessageFromUser(publisher, "receiverLocation")
+    # Prompt the use for the mailMission and send it
+    sendMailMission(publisher)
     
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
