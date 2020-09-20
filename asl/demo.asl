@@ -148,6 +148,40 @@ destinationLeft :-
 //!manageBattery.	// Dock the robot when it is time to recharge
 
 /**
+ * manageBattery
+ * Go to the dock station to charge the battery
+ */
+ // Low battery, not at the dock station, need to set the destination to the 
+ // dock station and go there
++!manageBattery
+	:	battery(low) & dockStation(DOCK) & 
+		((dest(DEST) & (not (DOCK = DEST)) | not dest(_)) & 
+		not postPoint(DOCK,_))
+	<-	do(16);
+		!setDestination(DOCK); 
+		!goToLocation;
+		!manageBattery.
+		
+// We are at the station, dock to charge the battery
++!manageBattery
+	: 	battery(low) & dockStation(DOCK) & postPoint(DOCK,_) & (not docked)
+	<-	do(17);
+		drive(stop);
+		station(dock);
+		+docked
+		.broadcast(tell, battery(charging));
+		!manageBattery.
+		
+// We are at the station, charging is done, undock
++!manageBattery
+	: 	battery(full) & docked
+	<-	do(18);
+		.broadcast(tell, battery(charged));
+		station(undock);
+		-docked
+		!manageBattery.
+
+/**
  * deliverMail
  * Go get the mail from the sender, deliver it to the receiver if I have it
  */
@@ -198,6 +232,8 @@ destinationLeft :-
 		//battery(ok))
 	<- 	do(4);
 		-haveMail;
+		-senderLocation(_);
+		-receiverLocation(_);
 		.broadcast(tell, mailUpdate(delivered));
 		!deliverMail.
 
@@ -277,39 +313,6 @@ destinationLeft :-
 		//not postPoint(_,_)
 	<-	do(14);
 		drive(DIRECTION).
-		
-		
-/**
- * manageBattery
- * Go to the dock station to charge the battery
- */
- // Low battery, not at the dock station, need to set the destination to the 
- // dock station and go there
-+!manageBattery
-	:	battery(low) & dockStation(DOCK) & dest(DEST) & (not (DOCK = DEST) & 
-		not postPoint(DOCK,_))
-	<-	do(16);
-		!setDestination(DOCK); 
-		!goToLocation;
-		!manageBattery.
-		
-// We are at the station, dock to charge the battery
-+!manageBattery
-	: 	battery(low) & dockStation(DOCK) & postPoint(DOCK,_)
-	<-	do(17);
-		drive(stop);
-		station(dock);
-		.broadcast(tell, battery(charging));
-		!manageBattery.
-		
-// We are at the station, charging is done, undock
-+!manageBattery
-	: 	battery(full)
-	<-	do(18);
-		.broadcast(tell, battery(charged));
-		station(undock);
-		!manageBattery.
-
 		
 /**
  * Set the destination of the robot
