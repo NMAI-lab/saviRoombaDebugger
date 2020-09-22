@@ -20,7 +20,7 @@ def sendMailMission(publisher):
 
     # Prompt user for input (using Pyton 7 method, ROS does not use Python 3)
     sender = raw_input("Please enter the sender location (Example: post1): ")
-    receiver = raw_input("Please enter the receiver location (Example: post1): ")
+    receiver = raw_input("Please enter the receiver location (Example: post4): ")
     
     # Build message, log and send it
     messageContent = "mailMission(" + str(sender) + "," + str(receiver) + ")"

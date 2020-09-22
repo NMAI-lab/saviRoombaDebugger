@@ -11,9 +11,9 @@ def getCharge(data, args):
     charge = data.data
 
     # Generate the perception
-    if charge < 25:
+    if charge < 0.25:
         batteryState = "battery(low)"
-    elif charge > 75:
+    elif charge > 0.75:
         batteryState = "battery(ok) battery(full)"
     else:
         batteryState = "battery(ok)"
