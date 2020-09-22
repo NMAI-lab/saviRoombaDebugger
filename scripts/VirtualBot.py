@@ -75,6 +75,8 @@ class VirtualBot:
             
             # If the bot does turn(left) or turn(right), adjust the direction accordingly
             self.lineIndex = self.lineValues.index("c")
+            
+            self.drive("forward") # Cheat to get it off of the post point
 
         else:
             rospy.loginfo("I can't turn, I'm docked!")

@@ -19,25 +19,25 @@ destination(unknown) :-
  
 // Arrived at the destination
 destination(arrived) :-
-	setDestination(DESTINATION) &
-	position(DESTINATION,_).
+	setDestination(LOCATION) &
+	position(LOCATION,_).
 
 // Destination is the previously seen post point
 destination(behind) :-
-	setDestination(DESTINATION) &
-	position(_,DESTINATION).
+	setDestination(LOCATION) &
+	position(_,LOCATION).
 
 // Rules @ post1, post4, and post5: at the edge of the map, everything is ahead
 destination(forward) :-
- 	setDestination(DESTINATION) &
+ 	setDestination(LOCATION) &
 	position(CURRENT,_) &
 	((CURRENT = post1) | (CURRENT = post4) | (CURRENT = post5)) &
-	not (CURRENT = DESTINATION). 
+	not (CURRENT = LOCATION). 
 
 // Rules @ post2, PAST = post1, (not DESTINATION = post1): Everything else is to
 // the left of us.
 destination(left) :-
-	setDestination(DESTINATION) &
+	setDestination(LOCATION) &
 	position(CURRENT,PAST) &
 	CURRENT = post2 &
 	PAST = post1.
@@ -45,83 +45,81 @@ destination(left) :-
 // Rules @ post2, PAST = post1, DESTINATION = post1: Everything else is
 // ahead of us.
 destination(behind) :-
-	setDestination(DESTINATION) &
+	setDestination(LOCATION) &
 	position(CURRENT,PAST) &
 	CURRENT = post2 &
 	PAST = post1 &
-	DESTINATION = PAST.
+	LOCATION = PAST.
 
 // Rules @ post2, not (PAST = post1), not (DESTINATION = post1): Everything else
 // is behind of us.
 destination(behind) :-
-	setDestination(DESTINATION) &
+	setDestination(LOCATION) &
 	position(CURRENT,PAST) &
 	CURRENT = post2 &
 	not (PAST = post1) &
-	not (DESTINATION = PAST).
+	not (LOCATION = PAST).
 	
 // Rules @ post3, PAST = post4, DESTINATION = post5
 destination(forward) :-
-	setDestination(DESTINATION) &
+	setDestination(LOCATION) &
 	position(CURRENT,PAST) &
 	CURRENT = post3 &
 	PAST = post4 &
-	DESTINATION = post5.
+	LOCATION = post5.
 
 // Rules @ post3, PAST = post5, DESTINATION = post4
 destination(forward) :-
-	setDestination(DESTINATION) &
+	setDestination(LOCATION) &
 	position(CURRENT,PAST) &
 	CURRENT = post3 &
 	PAST = post5 &
-	DESTINATION = post4.
+	LOCATION = post4.
 
 // Rules @ post3, PAST = post5, DESTINATION = post1 or post 2
 destination(right) :-
-	setDestination(DESTINATION) &
+	setDestination(LOCATION) &
 	position(CURRENT,PAST) &
 	CURRENT = post3 &
 	PAST = post5 &
-	((DESTINATION = post1) | (DESTINATION = post2)).
+	((LOCATION = post1) | (LOCATION = post2)).
 	
 // Rules @ post3, PAST = post4, DESTINATION = post1 or post 2
 destination(left) :-
-	setDestination(DESTINATION) &
+	setDestination(LOCATION) &
 	position(CURRENT,PAST) &
 	CURRENT = post3 &
 	PAST = post4 &
-	((DESTINATION = post1) | (DESTINATION = post2)).
+	((LOCATION = post1) | (LOCATION = post2)).
 
 // Rules @ post3, PAST = post2, DESTINATION = post1 or post2
 destination(behind) :-
-	setDestination(DESTINATION) &
+	setDestination(LOCATION) &
 	position(CURRENT,PAST) &
 	CURRENT = post3 &
 	PAST = post2 &
-	((DESTINATION = post1) | (DESTINATION = post2)).
+	((LOCATION = post1) | (LOCATION = post2)).
 
 // Rules @ post3, PAST = post2, DESTINATION = post4
 destination(right) :-
-	setDestination(DESTINATION) &
+	setDestination(LOCATION) &
 	position(CURRENT,PAST) &
 	CURRENT = post3 &
 	PAST = post2 &
-	DESTINATION = post4.
+	LOCATION = post4.
 
 // Rules @ post3, PAST = post2, DESTINATION = post4
 destination(left) :-
-	setDestination(DESTINATION) &
+	setDestination(LOCATION) &
 	position(CURRENT,PAST) &
 	CURRENT = post3 &
 	PAST = post2 &
-	DESTINATION = post5.
+	LOCATION = post5.
 	
 /**
  * High level goals
  */
-!collectAndDeliverMail(post1,post4).	// Highest level task: Deliver mail from sender to receiver
-//!collectMail(post1)
-//!deliverMail(post4)
+ !collectAndDeliverMail(post1,post4).	// Highest level task: Deliver mail from sender to receiver
 //!goTo(post4).		// Go to a destination location (such as a post point)
 //!followPath.		// Follow the path (line on the ground) 
 //!manageBattery.	// Dock the robot when it is time to recharge
@@ -174,55 +172,14 @@ destination(left) :-
  */
 +!collectAndDeliverMail(SENDER,RECEIVER)
 	<-	.broadcast(tell, mailUpdate(receivedMission,SENDER,RECEIVER));
-		!collectMail(SENDER);//	!goTo(SENDER);
+		!goTo(SENDER);
 		.broadcast(tell, mailUpdate(arrivedAtSender,SENDER,RECEIVER));
-		//+haveMail;
+		+haveMail;
 		.broadcast(tell, mailUpdate(collected,SENDER,RECEIVER));
-		!deliverMail(RECEIVER); //!goTo(RECEIVER);
+		!goTo(RECEIVER);
 		.broadcast(tell, mailUpdate(arrivedAtReceiver,RECEIVER));
-		//-haveMail;
+		-haveMail;
 		.broadcast(tell, mailUpdate(delivered,RECEIVER)).
-
-+!collectMail(LOCATION)
-	:	not haveMail
-	<-	!goTo(SENDER);
-		+haveMail.
-		
-+!deliverMail(LOCATION)
-	:	haveMail
-	<-	!goTo(RECEIVER);
-		-haveMail.
-		
-// Case where I have to collect mail and am not at the location.
-//+!collectMail(LOCATION)
-//	:	(not haveMail) & (not visited(LOCATION))
-//	<-	.broadcast(tell, mailUpdate(goingToSenderLocation));
-//		!goTo(LOCATION);
-//		!collectMail(LOCATION).
-		
-// Case where I have to collect mail and am at the location.
-//+!collectMail(LOCATION)
-//	:	(not haveMail) &
-//		visited(LOCATION)			// **** TODO: Update navigation predicates ****	
-//	<-	.broadcast(tell, mailUpdate(collected));
-//		+haveMail;
-//		-visited(_).
-
-// I have the mail, not at the receiver location
-// +!deliverMail(LOCATION)
-// 	: 	haveMail &
-//		(not visited(LOCATION))			// **** TODO: Update navigation predicates ****	
-//	<- 	.broadcast(tell, mailUpdate(goingToReceiverLocation));
-//		!goTo(LOCATION);
-//		!deliverMail(LOCATION).
-		
-// Case where I have the mail and am at the receiver location
-// +!deliverMail(LOCATION)
-// 	: 	haveMail &
-//		visited(LOCATION)			// **** TODO: Update navigation predicates ****	
-//	<- 	.broadcast(tell, mailUpdate(delivered));
-//		-visited(_);			// **** TODO: Update navigation predicates ****	
-//		-haveMail.
 
 /** 
  * !goTo(Location)
@@ -232,15 +189,15 @@ destination(left) :-
 +!goTo(LOCATION)
 	:	destination(unknown)
 	<-	.broadcast(tell, navigationUpdate(unknown));
-		+setDestination(DESTINATION);	// **** Remove + for navigation module
+		+setDestination(LOCATION);	// **** Remove + for navigation module
 		-position(_,_);			// **** TODO: Update navigation predicates ****	
 		!goTo(LOCATION).
 
 +!goTo(LOCATION)
 	:	destination(arrived)
 	<-	.broadcast(tell, navigationUpdate(arrived));
-		-position(_,_);			// **** TODO: Update navigation predicates ****	
-		-setDestination(_);		// **** TODO: Update navigation module actions ****
+		-position(_,_);					// **** TODO: Update navigation predicates ****	
+		-setDestination(LOCATION);		// **** TODO: Update navigation module actions ****
 		drive(stop).
 	
 +!goTo(LOCATION)
@@ -268,43 +225,38 @@ destination(left) :-
 	:	line(center) &
 		not (postPoint(_,_) | position(_,_))		// Use plan priority to remove need for this
 	<-	.broadcast(tell, path(center));
-		drive(forward).
+		drive(forward);
+		!followPath.
 		
 +!followPath
 	:	line(lost) & 
 		not (postPoint(_,_) | position(_,_))		// Use plan priority to remove need for this
 	<-	.broadcast(tell, path(lost));
-		drive(spiral).
+		drive(spiral);
+		!followPath.
 
 // Handle cases for left and right turns.
 +!followPath
 	:	line(DIRECTION) & 
 		not (postPoint(_,_) | position(_,_))		// Use plan priority to remove need for this
 	<-	.broadcast(tell, path(DIRECTION));
-		drive(DIRECTION).
+		drive(DIRECTION);
+		!followPath.
 		
 /**
  * Default plans, in case things go wrong.
  */
-+!collectAndDeliverMail(_,_)
++!collectAndDeliverMail(SENDER,RECEIVER)
 	<-	.broadcast(tell, collectAndDeliverMail(default));
-		!collectAndDeliverMail(_,_).
+		!collectAndDeliverMail(SENDER,RECEIVER).
 
-+!collectMail(_)
-	<-	.broadcast(tell, collectMail(default));
-		!collectMail(_).
-
-+!deliverMail(_)
-	<-	.broadcast(tell, deliverMail(default));
-		!deliverMail(_).
-
-+!goTo(_)
++!goTo(LOCATION)
 	<-	.broadcast(tell, goTo(default));
-		!goTo(_).
+		//!followPath;		// If we are stuck, try to go somewhere
+		!goTo(LOCATION).
 		
 +!followPath
-	<-	.broadcast(tell, followPath(default));
-		!goTo(_). 
+	<-	.broadcast(tell, followPath(default)). 
 
 +!manageBattery
 	<-	.broadcast(tell, manageBattery(default));
