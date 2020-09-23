@@ -27,7 +27,6 @@ def translatePerception(data, args):
     rospy.loginfo(postPoint)
     publisher.publish(postPoint)
 
-
 # Initialize the node, setup the publisher and subscriber
 def rosMain():
     rospy.init_node('qrTranslator', anonymous=True)

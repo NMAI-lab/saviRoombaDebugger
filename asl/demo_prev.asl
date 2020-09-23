@@ -1,15 +1,17 @@
 /**
  * @author	Chidiebere Onyedinma
  * @author	Patrick Gavigan
- * @date	2 July 2020
+ * @date	3 August 2020
  */
  
 /**
  * Main beliefs for the robot
  * Mission is hard coded for now (need to update this)
  */
-senderLocation(post1).		// The location of the mail sender
-receiverLocation(post4).	// The location of the mail receiver
+//mailMission(post1,post4).		// locations of the sender and receiver, 
+								// format: mailMission(SENDER,RECEIVER)
+//senderLocation(post1).		// The location of the mail sender
+//receiverLocation(post4).	// The location of the mail receiver
 dockStation(post5).			// The location of the docking station
 
 /**
@@ -19,19 +21,19 @@ dockStation(post5).			// The location of the docking station
 // Arrived at the destination
 atDestination :-
 	destination(DESTINATION) &
-	postPoint(DESTINATION,_).
+	position(DESTINATION,_).
 
 // Destination is the previously seen post point
 destinationBehind :-
 	destinaton(DESTINATION) &
-	postPoint(_,DESTINATION).
+	position(_,DESTINATION).
 
 // Rules @ post1, post4, and post5: at the edge of the map, everything is ahead
 destinationAhead :-
  	destination(DESTINATION) &
-	postPoint(CURRENT,PAST) &
+	position(CURRENT,_) &
 	((CURRENT = post1) | (CURRENT = post4) | (CURRENT = post5)) &
-	not (PAST = CURRENT). 
+	not (CURRENT = DESTINATION). 
 // Do we need to deal with the case where we were trying to drive off the end of
 // the map? Likely yes, not certain.
 	
@@ -39,16 +41,15 @@ destinationAhead :-
 // the left of us.
 destinationLeft :-
 	destination(DESTINATION) &
-	postPoint(CURRENT,PAST) &
+	position(CURRENT,PAST) &
 	CURRENT = post2 &
-	PAST = post1 &
-	not (DESTINATION = PAST).
+	PAST = post1.
 	
 // Rules @ post2, PAST = post1, DESTINATION = post1: Everything else is
 // ahead of us.
 destinationBehind :-
 	destination(DESTINATION) &
-	postPoint(CURRENT,PAST) &
+	position(CURRENT,PAST) &
 	CURRENT = post2 &
 	PAST = post1 &
 	DESTINATION = PAST.
@@ -57,7 +58,7 @@ destinationBehind :-
 // is behond of us.
 destinationBehind :-
 	destination(DESTINATION) &
-	postPoint(CURRENT,PAST) &
+	position(CURRENT,PAST) &
 	CURRENT = post2 &
 	not (PAST = post1) &
 	not (DESTINATION = PAST).
@@ -65,7 +66,7 @@ destinationBehind :-
 // Rules @ post3, PAST = post4, DESTINATION = post5
 destinationAhead :-
 	destination(DESTINATION) &
-	postPoint(CURRENT,PAST) &
+	position(CURRENT,PAST) &
 	CURRENT = post3 &
 	PAST = post4 &
 	DESTINATION = post5.
@@ -73,7 +74,7 @@ destinationAhead :-
 // Rules @ post3, PAST = post5, DESTINATION = post4
 destinationAhead :-
 	destination(DESTINATION) &
-	postPoint(CURRENT,PAST) &
+	position(CURRENT,PAST) &
 	CURRENT = post3 &
 	PAST = post5 &
 	DESTINATION = post4.
@@ -81,7 +82,7 @@ destinationAhead :-
 // Rules @ post3, PAST = post5, DESTINATION = post1 or post 2
 destinationRight :-
 	destination(DESTINATION) &
-	postPoint(CURRENT,PAST) &
+	position(CURRENT,PAST) &
 	CURRENT = post3 &
 	PAST = post5 &
 	((DESTINATION = post1) | (DESTINATION = post2)).
@@ -89,7 +90,7 @@ destinationRight :-
 // Rules @ post3, PAST = post4, DESTINATION = post1 or post 2
 destinationLeft :-
 	destination(DESTINATION) &
-	postPoint(CURRENT,PAST) &
+	position(CURRENT,PAST) &
 	CURRENT = post3 &
 	PAST = post4 &
 	((DESTINATION = post1) | (DESTINATION = post2)).
@@ -97,7 +98,7 @@ destinationLeft :-
 // Rules @ post3, PAST = post2, DESTINATION = post1 or post2
 destinationBehind :-
 	destination(DESTINATION) &
-	postPoint(CURRENT,PAST) &
+	position(CURRENT,PAST) &
 	CURRENT = post3 &
 	PAST = post2 &
 	((DESTINATION = post1) | (DESTINATION = post2)).
@@ -105,7 +106,7 @@ destinationBehind :-
 // Rules @ post3, PAST = post2, DESTINATION = post4
 destinationRight :-
 	destination(DESTINATION) &
-	postPoint(CURRENT,PAST) &
+	position(CURRENT,PAST) &
 	CURRENT = post3 &
 	PAST = post2 &
 	DESTINATION = post4.
@@ -113,85 +114,167 @@ destinationRight :-
 // Rules @ post3, PAST = post2, DESTINATION = post4
 destinationLeft :-
 	destination(DESTINATION) &
-	postPoint(CURRENT,PAST) &
+	position(CURRENT,PAST) &
 	CURRENT = post3 &
 	PAST = post2 &
 	DESTINATION = post5.
 	
+/*
+NAVIGATION WITH NEW MODULE
+
+// Arrived at the destination
+atDestination :-
+	(destination(DESTINATION) & position(DESTINATION,_)) | direction(arrived).
+
+// Destination is the previously seen post point
+destinationBehind :-
+	(destinaton(DESTINATION) & position(_,DESTINATION)) | direction(behind).
+
+destinationAhead :- 
+	direction(forward).
+	
+destinationRight :-
+	direction(right).
+	
+destinationLeft :-
+	direction(left).
+*/
+
 /**
  * High level goals
  */
 !deliverMail.		// Highest level task: Deliver mail from sender to receiver
 //!goToLocation.	// Go to a destination location (such as a post point)
 //!followPath.		// Follow the path (line on the ground) 
-//!dock.			// Dock the robot when it is time to recharge
+//!manageBattery.	// Dock the robot when it is time to recharge
+
++postPoint(A,B)
+	:	not position(_,_)
+	<-	+position(A,B);
+		setPost(A,B).
+	
++postPoint(A,B)
+	:	position(C,D) &
+		((not (A = C)) | (not (B = D)))
+	<-	-position(_,_);
+		+position(A,B);
+		setPostWithDrop(A,B).
+
+/**
+ * Set the destination of the robot
+ */
++!setDestination(DESTINATION)
+	<-	do(20);
+		-destination(_);
+		+destination(DESTINATION);
+		setDestination(DESTINATION).	// Used with new navigation module only
+		
+/**
+ * manageBattery
+ * Go to the dock station to charge the battery
+ */
+ // Low battery, not at the dock station, need to set the destination to the 
+ // dock station and go there
++!manageBattery
+	:	battery(low) & dockStation(DOCK) & 
+		((dest(DEST) & (not (DOCK = DEST)) | not dest(_)) & 
+		not position(DOCK,_))
+	<-	do(16);
+		!setDestination(DOCK); 
+		!goToLocation;
+		!manageBattery.
+		
+// We are at the station, dock to charge the battery
++!manageBattery
+	: 	battery(low) & dockStation(DOCK) & position(DOCK,_) & (not docked)
+	<-	do(17);
+		drive(stop);
+		station(dock);
+		+docked
+		.broadcast(tell, battery(charging));
+		!manageBattery.
+		
+// We are at the station, charging is done, undock
++!manageBattery
+	: 	battery(full) & docked
+	<-	do(18);
+		.broadcast(tell, battery(charged));
+		station(undock);
+		-docked
+		!manageBattery.
 
 /**
  * deliverMail
  * Go get the mail from the sender, deliver it to the receiver if I have it
  */
  
+// Case where the mission is being specified
++!deliverMail
+	:	mailMission(SENDER,RECEIVER) &
+		not (senderLocation(_) | receiverLocation(_)) 
+	<-	do(missionSet);
+		+senderLocation(SENDER);
+		+receiverLocation(RECEIVER);
+		-mailMission(_,_);
+		!deliverMail.
+ 
  // Case where I have a sender location and don't yet have the mail, not 
  // currently at the senderLocation.
-+!deliverMail
-	: 	(not haveMail) &
+ +!deliverMail
+ 	: 	((not haveMail) &
 		senderLocation(SENDER) &
-		receiverLocation(RECEIVER) &
-		postPoint(OTHER,_) & 
-		not (OTHER = SENDER) &
-		battery(ok)
-	<- 	-destination(_);
-		+destination(SENDER);
+		(not position(SENDER,_)))	// There's a bug here -> position is dropped as part of navigation
+									// Perhaps the temp fix is to have visited predicates of places I've been?
+	<- 	do(1);
+		!setDestination(SENDER);
 		!goToLocation;
 		!deliverMail.
 		
 // Case where I am at the sender location
 // Assume that the fact that I have arrived at the sender location means that 
 // I have the mail (this will need to be updated)
-+!deliverMail
- 	: 	(not haveMail) &
+ +!deliverMail
+ 	: 	((not haveMail) &
 		senderLocation(SENDER) &
-		receiverLocation(RECEIVER) &
-		postPoint(SENDER,_) & 
-		battery(ok)
-	<- 	+haveMail;
-		//-senderLocation(_);	// Should we remove the sender location here?
+		position(SENDER,_))
+	<- 	do(2);
+		+haveMail;
+		-senderLocation(_);
+		.broadcast(tell, mailUpdate(collected));
 		!deliverMail.
  
 // Case where I have the mail and need to deliver it to the receiver
-+!deliverMail
- 	: 	haveMail &
+ +!deliverMail
+ 	: 	(haveMail &
 		receiverLocation(RECEIVER) &
-		postPoint(OTHER,_) &
-		not (OTHER = RECEIVER) &
-		batteryOK
-	<- 	-destination(_);
-		+destination(RECEIVER);
+		not position(RECEIVER,_))
+	<- 	do(3);
+		!setDestination(RECEIVER);
 		!goToLocation;
 		!deliverMail.
 		
 // Case where I have the mail and am at the receiver location
-+!deliverMail
- 	: 	haveMail &
+ +!deliverMail
+ 	: 	(haveMail &
 		receiverLocation(RECEIVER) &
-		postPoint(RECEIVER,_) //&
-		//batteryOK
-	<- 	-haveMail;
-		!deliverMail.
-		// -receiverLocation(_).	// Should we remove the receiver location here?
+		position(RECEIVER,_))
+	<- 	do(4);
+		-receiverLocation(_);
+		-haveMail;
+		.broadcast(tell, mailUpdate(delivered)).//;
+		//!deliverMail.
 
 // Case where the battery is low
-+!deliverMail
-	: 	(batteryLow &
-		dockStation(DOCK))	
-	<-	-destination(_);
-		+destination(DOCK);
-		!goToLocation;
-		!deliverMail.
-		
-// Catchall (suspect that this should not be needed)
-+!deliverMail
-	<-	!deliverMail.
+// +!deliverMail
+// 	: 	(battery(low) &
+//		dockStation(DOCK))	
+//	<-	do(5);
+//		!manageBattery;
+		//-destination(_);
+		//+destination(DOCK);
+		//!dock;
+//		!deliverMail.
+
 
 /** 
  * goToLocation
@@ -200,46 +283,41 @@ destinationLeft :-
  */
 +!goToLocation
 	:	destinationAhead
-	<-	!followPath;
+	<-	do(6);
+		drive(forward);
+		-position(_,_);
+		!followPath;
 		!goToLocation.
 
 +!goToLocation
 	:	atDestination
-	<-	drive(stop).
+	<-	do(7);
+		-position(_,_);
+		drive(stop).
 	
 +!goToLocation
 	:	destinationLeft	// TODO: Update to use unification for left, right, behind?
-	<-	turn(left);	// TODO: This (or something similar) needs to be implementd
+	<-	do(8);
+		turn(left);
+		-position(_,_);
 		!followPath;
 		!goToLocation.
 		
 +!goToLocation
 	:	destinationRight	// TODO: Update to use unification for left, right, behind?
-	<-	turn(right);		// TODO: This (or something similar) needs to be implementd
+	<-	do(9);
+		turn(right);		// TODO: This (or something similar) needs to be implementd
+		-position(_,_);
 		!followPath;
 		!goToLocation.
 	
 +!goToLocation
 	:	destinationBehind	// TODO: Update to use unification for left, right, behind?
-	<-	turn(left);		// TODO: This (or something similar) needs to be implementd
+	<-	do(10);
+		turn(left);		// TODO: This (or something similar) needs to be implementd
+		-position(_,_);
 		!followPath;
 		!goToLocation.
-/*
-+!goToLocation
-	:	batteryLow	// Not sure if this is properly handled.
-	<-	!dock;
-		!goToLocation.
-
-+!goToLocation
-	:	batteryOK & docked
-	<-	!undock;
-		!goToLocation.	// Has this plan been implemented?
-*
-+!goToLocation
-	<-	run(6);
-		!goToLocation;
-		!followPath.
-*/
 
 /** 
  * followPath
@@ -250,43 +328,41 @@ destinationLeft :-
  // in this set). This would need a modification of the scripts that interpret 
  // drive() action, or the script that generates the line() message (of both)
 +!followPath
-	:	line(center)
-	<-	drive(forward);
-		!followPath.
-
+	:	line(center) &
+		not (postPoint(_,_) | position(_,_))
+	<-	do(12);
+		drive(forward).
+		
 +!followPath
-	:	line(lost) | line(across)
-	<-	drive(left);
-		drive(forward);
-		!followPath.
+	:	line(lost) & 
+		not (postPoint(_,_) | position(_,_))
+	<-	do(13);
+		drive(spiral).
 
 // Handle cases for left and right turns.
 +!followPath
-	:	line(DIRECTION) &
-		((DIRECTION = left) | (DIRECTION = right))
-	<-	drive(DIRECTION);
-		!followPath.
+	:	line(DIRECTION) & 
+		not (postPoint(_,_) | position(_,_))
+	<-	do(14);
+		drive(DIRECTION).
 		
-+!followPath
-	<-	!followPath.
-
+		
 /**
- * dock
- * Dock the robot at the charging station
+ * Default plans, in case things go wrong.
  */
-+!dock
- 	:	not atDockPost & onTrack
-	<-	!navigate;
-		!dock.
-
-+!dock
-	:	atDockPost & moving
-	<-	drive(stop);
-	   	!dock.
-
-+!dock
-	:	atDockPost & not moving
-	<-	dock_bot.
++!deliverMail
+	<-	do(5);
+		!deliverMail.
+		
++!goToLocation
+	<-	do(11);
+		!followPath;
+		!goToLocation.
+		
+// Default follow path. try again if it didn't work
++!followPath
+	<- 	do(15).
 	
-+!dock.
-
++!manageBattery
+	<-	do(19);
+		!manageBattery.

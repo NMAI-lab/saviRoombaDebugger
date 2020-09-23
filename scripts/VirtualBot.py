@@ -1,26 +1,23 @@
 #!/usr/bin/env python
 
-# Demonstration program of the savi_ros_bdi system
-
-# Created on Wed Feb 19 16:17:21 2020
-# @author: Patrick Gavigan
-
 
 import rospy
 import re
 import random
+from VirtualMap import VirtualMap
 
 class VirtualBot:
     def __init__(self):
         self.lineValues = ["ll","l","c","r"]    # Treat this as a circular list
         self.lineIndex = self.lineValues.index("c")  # Index of the circular list
-        self.position = 1
-        self.postPointIndex = 0
-        self.postPoints = ["post1", "post2", "post3", "post4", "post5"]
-        self.movementCount = 0
-        self.directionOK = True # Update this later to be based on geometry
+        #self.position = 1
+        #self.postPointIndex = 0
+        #self.postPoints = ["post1", "post2", "post3", "post4", "post5"]
+        #self.movementCount = 0
+        #self.directionOK = True # Update this later to be based on geometry
         self.battery = 95
         self.docked = False
+        self.map = VirtualMap()
         
     def act(self, action):
         rospy.loginfo("Action parameter was: " + action)
@@ -48,6 +45,10 @@ class VirtualBot:
         
         # Update battery
         self.updateBattery()
+        
+        # Check for map error
+        if (not self.map.checkOnPath()):
+            rospy.loginfo("!!!! MAP ERROR, THE ROBOT LEFT THE MAP!!!!!")
 
 
     # Implementation of the drive action
@@ -55,7 +56,8 @@ class VirtualBot:
         if self.docked == False:
             rospy.loginfo("I need to drive: " + str(parameter))
             if parameter == "forward":
-                self.updatePosition()
+                self.map.move()
+                rospy.loginfo("Map location: " + str(self.map.position))
             else:
                 self.updateLine(parameter)
         else: 
@@ -65,10 +67,16 @@ class VirtualBot:
     # Similar to drive action but continues until the line sensor detects "c"
     def turn(self, parameter):
         if self.docked == False:
-            rospy.loginfo("************* I need to turn: " + str(parameter))
+            rospy.loginfo("I need to turn: " + str(parameter))
+            if parameter == 'left':
+                self.map.turn(-1)
+            else:
+                self.map.turn(1)
             
             # If the bot does turn(left) or turn(right), adjust the direction accordingly
             self.lineIndex = self.lineValues.index("c")
+            
+            self.drive("forward") # Cheat to get it off of the post point
 
         else:
             rospy.loginfo("I can't turn, I'm docked!")
@@ -89,15 +97,15 @@ class VirtualBot:
         
     # This is a hack! Need to update to reflect geometry of the map
     # Basically, this implements the drive(forward) action
-    def updatePosition(self):
-        if self.perceiveLine() == "c":
-            if self.movementCount > 4:
-                self.movementCount = 0
-                self.postPointIndex += 1
-            else: 
-                self.movementCount += 1
-        else:
-            self.lineIndex = self.lineValues.index("ll")                    
+    #def updatePosition(self):
+    #    if self.perceiveLine() == "c":
+    #        if self.movementCount > 4:
+    #            self.movementCount = 0
+    #            self.postPointIndex += 1
+    #        else: 
+    #            self.movementCount += 1
+    #    else:
+    #        self.lineIndex = self.lineValues.index("ll")                    
 
         
     # Update the line sensor data
@@ -131,12 +139,22 @@ class VirtualBot:
     
     # Sense the qr state data
     def perceiveQR(self):
-        if self.movementCount == 0:
-            return self.postPoints[self.postPointIndex]
-        else:
-            return -1
+        return self.map.getPostPoint()
+        #if self.movementCount == 0:
+        #    return self.postPoints[self.postPointIndex]
+        #else:
+        #    return -1
 
     # Sense the battery state data
     def perceiveBattery(self):
         # Have the battery reduce charge?
         return self.battery
+    
+def test():
+    bot = VirtualBot()
+    print(bot.perceiveBattery())
+    
+    bot.act(str("drive(forward)"))
+    
+if __name__ == '__main__':
+    test()
