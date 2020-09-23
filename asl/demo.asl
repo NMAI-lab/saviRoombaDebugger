@@ -1,14 +1,8 @@
 /**
  * @author	Patrick Gavigan
- * @date	21 September 2020
+ * @date	22 September 2020
  */
  
-/**
- * Main beliefs for the robot
- * Dock location is hard coded for now
- */
-dockStation(post5).			// The location of the docking station
-
 /**
  * Navigation rules
  * TODO: Replace with navigation module
@@ -119,10 +113,10 @@ destination(left) :-
 /**
  * High level goals
  */
-!collectAndDeliverMail(post1,post4).	// Highest level task: Deliver mail from sender to receiver
+//!collectAndDeliverMail(post1,post4).	// Highest level task: Deliver mail from sender to receiver
 //!goTo(post4).		// Go to a destination location (such as a post point)
 //!followPath.		// Follow the path (line on the ground) 
-//!manageBattery.	// Dock the robot when it is time to recharge
+!manageBattery.		// Dock the robot when it is time to recharge
 
 /**
  * manageBattery

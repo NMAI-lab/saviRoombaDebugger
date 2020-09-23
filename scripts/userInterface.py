@@ -9,8 +9,7 @@ from std_msgs.msg import String
 import time
 from datetime import datetime
 
-startTime = 0
-endTime = 0
+startTime = 0   # Set the start time as a global variable
 
 def sendMailMission(publisher):
     messageID = int(round(time.time() * 1000))  # Crude message ID
@@ -21,9 +20,21 @@ def sendMailMission(publisher):
     # Prompt user for input (using Pyton 7 method, ROS does not use Python 3)
     sender = raw_input("Please enter the sender location (Example: post1): ")
     receiver = raw_input("Please enter the receiver location (Example: post4): ")
+    dock = raw_input("Please enter the dock location (Example: post5): ")
     
-    # Build message, log and send it
-    messageContent = "mailMission(" + str(sender) + "," + str(receiver) + ")"
+    # Build message with the dock location, log and send it
+    messageType = "tell"
+    messageContent = "dockStation(" + str(dock) + ")"
+    message = "<" + str(messageID) + "," + userID + "," + messageType + "," + agentID + "," + messageContent + ">"
+    rospy.loginfo("Sending message: " + str(message))
+    publisher.publish(message)
+
+    # Give it a moment
+    time.sleep(1)
+    
+    # Build message with the mail mission, log and send it
+    messageType = "achieve"
+    messageContent = "collectAndDeliverMail(" + str(sender) + "," + str(receiver) + ")"
     message = "<" + str(messageID) + "," + userID + "," + messageType + "," + agentID + "," + messageContent + ">"
     rospy.loginfo("Sending message: " + str(message))
     publisher.publish(message)
@@ -32,12 +43,15 @@ def sendMailMission(publisher):
 # Receive outbox messages. Just print everything.
 def receiveMessage(data):
     rospy.loginfo("Received message: " + str(data.data))
-    # ToDo: Send this to a phone app
     
     # Check if the message contains the delivered signal
     if "mailUpdate(delivered)" in data.data:
+        global startTime
         endTime = datetime.now()
-        rospy.loginfo("Mission complete at " + str(endTime))
+        rospy.loginfo("**** Mission complete ****")
+        rospy.loginfo("Start time was: " + str(startTime))
+        rospy.loginfo("End time was: " + str(endTime))
+        
 
 # Main program
 def rosMain():
@@ -56,6 +70,10 @@ def rosMain():
 
     # Prompt the use for the mailMission and send it
     sendMailMission(publisher)
+
+    # Log the start time of the mission
+    global startTime
+    startTime = datetime.now()
     
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
