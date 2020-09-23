@@ -280,6 +280,6 @@ destination(left) :-
 
 // Ensure recursion. We always need to manage the battery
 +!manageBattery
-	<-	.broadcast(tell, manageBattery(default));
+	<-	//.broadcast(tell, manageBattery(default));
 		!manageBattery.
 
