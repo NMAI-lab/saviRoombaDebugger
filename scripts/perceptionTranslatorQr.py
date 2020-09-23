@@ -6,7 +6,6 @@ from std_msgs.msg import String
 # Global variables to remember current and previous qr codes
 previous = "unknown"
 current = "unknown"
-#previousMessage = "nothing"
 
 # Translate the line sensor data into a perception and publish
 def translatePerception(data, args):
@@ -17,7 +16,6 @@ def translatePerception(data, args):
     # Get access to the global variables (a bit hacky)
     global previous
     global current
-#    global previousMessage
     
     # Check if the post point changed, update history if necessary
     if qr != current:
@@ -26,10 +24,8 @@ def translatePerception(data, args):
 
     # Publish the perception
     postPoint = "postPoint({},{})".format(current, previous)
-#    if not(postPoint in previousMessage):
     rospy.loginfo(postPoint)
     publisher.publish(postPoint)
-#        previousMessage = postPoint
 
 # Initialize the node, setup the publisher and subscriber
 def rosMain():
