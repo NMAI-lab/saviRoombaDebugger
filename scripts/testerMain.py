@@ -47,17 +47,17 @@ def testerMain():
     rate = rospy.Rate(1) # 1hz
     while not rospy.is_shutdown():
         
-        # Publish the line data
-        line = bot.perceiveLine()
-        #rospy.loginfo("Line data: " + line)
-        linePublisher.publish(line)
-        
         # QR perception
         qr = bot.perceiveQR()
         if qr != -1:
             #rospy.loginfo("QR data: " + qr)
             qrPublisher.publish(qr)
-        
+ 
+        # Publish the line data
+        line = bot.perceiveLine()
+        #rospy.loginfo("Line data: " + line)
+        linePublisher.publish(line)       
+ 
         # Battery perception
         battery = bot.perceiveBattery()
         #rospy.loginfo("Battery data: " + str(battery))

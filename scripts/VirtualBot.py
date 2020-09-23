@@ -3,7 +3,7 @@
 
 import rospy
 import re
-import random
+#import random
 from VirtualMap import VirtualMap
 
 class VirtualBot:
@@ -15,7 +15,7 @@ class VirtualBot:
         #self.postPoints = ["post1", "post2", "post3", "post4", "post5"]
         #self.movementCount = 0
         #self.directionOK = True # Update this later to be based on geometry
-        self.battery = 95
+        self.battery = 0.95
         self.docked = False
         self.map = VirtualMap()
         
@@ -49,6 +49,10 @@ class VirtualBot:
         # Check for map error
         if (not self.map.checkOnPath()):
             rospy.loginfo("!!!! MAP ERROR, THE ROBOT LEFT THE MAP!!!!!")
+            rospy.loginfo("!!!! RETURNING ROBOT TO THE MAP !!!!!")
+            #self.lineIndex = self.lineValues.index("ll")  # Line is lost
+            self.map.getToPath()
+            
 
 
     # Implementation of the drive action
@@ -58,7 +62,11 @@ class VirtualBot:
             if parameter == "forward":
                 self.map.move()
                 rospy.loginfo("Map location: " + str(self.map.position))
-            else:
+            elif parameter == 'spiral':
+                print("SPIRALING")
+                self.map.getToPath()
+                self.updateLine(parameter)
+            else: 
                 self.updateLine(parameter)
         else: 
             rospy.loginfo("I can't drive, I'm docked!")
@@ -117,7 +125,8 @@ class VirtualBot:
         elif direction == "right":
             self.lineIndex -= 1
         elif direction == "sprial":
-            self.lineIndex = random.randint(0,len(self.lineValues)-1)
+            #self.lineIndex = random.randint(0,len(self.lineValues)-1)
+            self.lineIndex = self.lineValues.index("c")  # Index of the circular list
             
         if self.lineIndex >= len(self.lineValues):
             self.lineIndex = 0
@@ -126,12 +135,18 @@ class VirtualBot:
  
 
     # Charge and discharge the battery
+    # Battery is a charge ratio, meaning it have a maximum value of 1.00 and 
+    # a minimum value of 0.00
     def updateBattery(self):
-        if self.docked and (self.battery < 100):
-            self.battery = self.battery + 1
-        elif (not self.docked) and (self.battery > 0):
-            self.battery = self.battery - 1
+        if self.docked:
+            self.battery = self.battery + 0.01
+        elif (not self.docked):
+            self.battery = self.battery - 0.01
        
+        if self.battery > 1.00:
+            self.battery = 1.00
+        elif self.battery < 0.00:
+            self.battery = 0.00
 
     # Sense the line state data
     def perceiveLine(self):
@@ -147,7 +162,7 @@ class VirtualBot:
 
     # Sense the battery state data
     def perceiveBattery(self):
-        # Have the battery reduce charge?
+        self.updateBattery()    # Have the battery reduce charge?
         return self.battery
     
 def test():
