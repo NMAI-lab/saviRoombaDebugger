@@ -265,7 +265,7 @@ destination(LOCATION,LOCATION,left) :-
  // The robot has a different destination than the one we need to go to.
  +!goTo(LOCATION)
 	:	destination(LOCATION,old,_)
-	<-	.broadcast(tell, navigationUpdate(updateDestination,A,LOCATION));
+	<-	.broadcast(tell, navigationUpdate(updateDestination,LOCATION));
 		-setDestination(_);
 		+setDestination(LOCATION);	// **** Remove + for navigation module
 		!goTo(LOCATION).
