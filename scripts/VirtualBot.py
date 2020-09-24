@@ -143,7 +143,7 @@ class VirtualBot:
     # a minimum value of 0.00
     def updateBattery(self):
         if self.docked:
-            self.battery = self.battery + 0.01
+            self.battery = self.battery + 0.1   # Make this go faster
         elif (not self.docked):
             self.battery = self.battery - 0.01
        
