@@ -100,6 +100,10 @@ class VirtualBot:
         
         # Need to do an update of the position and the line here
         
+        # Turn around (this is coded into the undock action in the action translator)
+        self.turn("left")   # Cheat and turn the robot once so that it can get back on track
+        self.turn("left")   # Cheat and turn the robot once so that it can get back on track
+        
         rospy.loginfo("Robot is undocked")
         
         
