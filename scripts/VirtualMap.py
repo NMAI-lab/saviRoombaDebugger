@@ -19,14 +19,16 @@ class VirtualMap:
         self.nodeNames = json.load(f)
         
         # Set starting position
-        self.position = copy.deepcopy(self.nodeLocations[self.nodeNames[0]])
+        self.initialPosition = copy.deepcopy(self.nodeLocations[self.nodeNames[0]])
+        self.position = self.initialPosition
         
         # Possible directions for the robot to face assuming 90 degree turns
         # (to keep it simple for now)
         self.directionOptions = [[0,-1],[-1,0],[0,1],[1,0]]
         
         # Index of the initial direction that the robot is facing
-        self.directionIndex = 0
+        self.initialDirectionIndex = 0
+        self.directionIndex = self.initialDirectionIndex
 
         # Double check that the robot is on the path
         onPath = self.checkOnPath()
@@ -70,9 +72,8 @@ class VirtualMap:
     # A way for the robot to look for the path by moving around in circles 
     # until it finds a spot that is on the path
     def getToPath(self):
-        if (self.checkOnPath() == False):
-            self.position = self.lastGoodPosition
-            self.directionIndex = self.lastGoodDirectionIndex
+        self.position = self.initialPosition
+        self.directionIndex = self.initialDirectionIndex
         # movementsToTake = 1
         # movementsTaken = 0
         # numTurnsTaken = 0
@@ -98,7 +99,7 @@ class VirtualMap:
         for location in self.nodeLocations:
             if self.nodeLocations[location] == self.position:
                 return location
-            
+                    
         # If no location code was found
         return -1
         
