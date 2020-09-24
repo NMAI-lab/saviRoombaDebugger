@@ -103,6 +103,7 @@ class VirtualBot:
         # Turn around (this is coded into the undock action in the action translator)
         self.turn("left")   # Cheat and turn the robot once so that it can get back on track
         self.turn("left")   # Cheat and turn the robot once so that it can get back on track
+        rospy.loginfo("Turned around, direction is: " + str(self.map.getDirection()))
         
         rospy.loginfo("Robot is undocked")
         
