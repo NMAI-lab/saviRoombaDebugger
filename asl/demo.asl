@@ -127,7 +127,8 @@ destination(LOCATION,LOCATION,left) :-
 +battery(low)
 	:	(not charging) & 
 		dockStation(DOCK) &
-		mailMission(SENDER,RECEIVER)
+		mailMission(SENDER,RECEIVER) //&
+		//postPoint(_,_)
 	<-	+charging;
 		.drop_all_intentions;
 		.broadcast(tell, battery(chargingNeeded));
@@ -143,7 +144,8 @@ destination(LOCATION,LOCATION,left) :-
 +battery(low)
 	:	(not charging) &
 		dockStation(DOCK) &
-		not mailMission(SENDER,RECEIVER)
+		not mailMission(SENDER,RECEIVER) //&
+		//postPoint(_,_)
 	<-	+charging;
 		.broadcast(tell, battery(chargingNeeded));
 		.broadcast(tell, battery(noMissionToInterrupt));
@@ -167,7 +169,7 @@ destination(LOCATION,LOCATION,left) :-
 		dockStation(DOCK) &
 		(not docked)
 	<-	.broadcast(tell, battery(chargingNeeded));
-		!goTo(DOCK);
+		!goTo(DOCK,1);
 		.broadcast(tell, battery(atDock));
 		station(dock);
 		.broadcast(tell, battery(docked));
@@ -211,7 +213,7 @@ destination(LOCATION,LOCATION,left) :-
 +!collectMail(SENDER)
 	:	not haveMail
 	<-	.broadcast(tell, collectMail(goToSender,SENDER));
-		!goTo(SENDER);
+		!goTo(SENDER,1);
 		.broadcast(tell, collectMail(atSender,SENDER));
 		+haveMail;
 		.broadcast(tell, collectMail(haveMail,SENDER)).
@@ -229,7 +231,7 @@ destination(LOCATION,LOCATION,left) :-
 +!deliverMail(RECEIVER)
 	:	haveMail
 	<-	.broadcast(tell, deliverMail(goToReceiver,RECEIVER));
-		!goTo(RECEIVER);
+		!goTo(RECEIVER,1);
 		.broadcast(tell, deliverMail(arrivedAtReceiver,RECEIVER));
 		-haveMail;
 		.broadcast(tell, deliverMail(delivered,RECEIVER)).
@@ -240,10 +242,15 @@ destination(LOCATION,LOCATION,left) :-
 	<-	.broadcast(tell, deliverMail(noMail,RECEIVER)).
 
 /** 
- * !goTo(LOCATION)
+ * !goTo(LOCATION,WATCHDOG)
  * Used for navigating the robot via the post points. Decide if the robot needs 
  * to turn or drive forward. Uses the sub goal of !followPath to move between 
  * post points.
+ *
+ * WATCHDOG is a counter to help keep us from getting stuck (in a scenario where
+ * we can't see a postPoint. When adopting this goal, always set this to 1 on
+ * the first iteration.
+ * Example: !goTo(post3,1)
  * 
  * LOCATION: The location we want to go to
  * SET_DESTINATION: The location that the agent has set itself to navigate to
@@ -256,51 +263,59 @@ destination(LOCATION,LOCATION,left) :-
 
  // Case where the robot has not yet set a destination to navigate to. Need to 
  // set the destination.
-+!goTo(LOCATION)
++!goTo(LOCATION,_)
 	:	destination(_,unknown,_)
 	<-	.broadcast(tell, navigationUpdate(setDestination,LOCATION));
 		+setDestination(LOCATION);	// **** Remove + for navigation module
-		!goTo(LOCATION).
+		!goTo(LOCATION,1).
 
  // The robot has a different destination than the one we need to go to.
- +!goTo(LOCATION)
+ +!goTo(LOCATION,_)
 	:	destination(LOCATION,old,_)
 	<-	.broadcast(tell, navigationUpdate(updateDestination,LOCATION));
 		-setDestination(_);
 		+setDestination(LOCATION);	// **** Remove + for navigation module
-		!goTo(LOCATION).
+		!goTo(LOCATION,1).
 		
 // Case where the robot has arrived at the destination.
-+!goTo(LOCATION)
++!goTo(LOCATION,_)
 	:	destination(LOCATION,LOCATION,arrived)
 	<-	.broadcast(tell, navigationUpdate(arrived));
 		-setDestination(LOCATION);		// **** TODO: Update navigation module actions ****
 		drive(stop).
 	
 // Destination is behind us: turn and start following the path.
-+!goTo(LOCATION)
++!goTo(LOCATION,_)
 	:	destination(LOCATION,LOCATION,behind)
 	<-	.broadcast(tell, navigationUpdate(behind));
 		turn(left);
 		!followPath;
-		!goTo(LOCATION).
+		!goTo(LOCATION,1).
 		
 // Destiantion is forward. Drive forward, follow the path.
-+!goTo(LOCATION)
++!goTo(LOCATION,_)
 	:	destination(LOCATION,LOCATION,forward)
 	<-	.broadcast(tell, navigationUpdate(forward));
 		drive(forward);
 		!followPath;
-		!goTo(LOCATION).
+		!goTo(LOCATION,1).
 
 // Destiantion is either left or right. Turn and then follow the path.
-+!goTo(LOCATION)
++!goTo(LOCATION,_)
 	:	destination(LOCATION,LOCATION,DIRECTION) &
 		((DIRECTION = left) | (DIRECTION = right))
 	<-	.broadcast(tell, navigationUpdate(DIRECTION));
 		turn(DIRECTION);
 		!followPath;
-		!goTo(LOCATION).
+		!goTo(LOCATION,1).
+		
+// If WATCHDOG increaments past 20 we may be stuck. Try !followPath to see if
+// we can find a postPoint. Reset WATCHDOG.
++!goTo(LOCATION,WATCHDOG)
+	:	WATCHDOG > 20
+	<-	.broadcast(tell, navigationUpdate(watchdogOverflow));
+		!followPath;
+		!goTo(LOCATION,1).
 
 /** 
  * !followPath
@@ -355,10 +370,10 @@ destination(LOCATION,LOCATION,left) :-
 		!collectAndDeliverMail(SENDER,RECEIVER).
 
 // Deal with the scenario where the reasoning cycle runs on a perception other 
-// than a post point.
-+!goTo(LOCATION)
-	<-	.broadcast(tell, goTo(default));
-		!goTo(LOCATION).
+// than a post point. Increment WATCHDOG and try again.
++!goTo(LOCATION,WATCHDOG)
+	<-	.broadcast(tell, goTo(default, LOCATION, WATCHDOG));
+		!goTo(LOCATION, (WATCHDOG + 1)).
 		
 // Ensure recursion. For example, if only a battery perception is received, you
 // don't want to lose the followPath intention.
