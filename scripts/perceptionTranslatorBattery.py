@@ -13,14 +13,14 @@ def getCharge(data, args):
     # Generate the perception
     if charge < 0.25:
         batteryState = "battery(low)"
-    elif charge > 0.75:
+    elif charge > 0.99:
         batteryState = "battery(ok) battery(full)"
     else:
         batteryState = "battery(ok)"
 
 
     # Publish the perception
-    rospy.loginfo(batteryState)
+    rospy.loginfo(batteryState + " charge: " + str(charge))
     publisher.publish(batteryState)
 
 

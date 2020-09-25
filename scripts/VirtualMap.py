@@ -19,14 +19,21 @@ class VirtualMap:
         self.nodeNames = json.load(f)
         
         # Set starting position
-        self.position = copy.deepcopy(self.nodeLocations[self.nodeNames[0]])
+        self.initialPosition = copy.deepcopy(self.nodeLocations[self.nodeNames[0]])
+        self.position = self.initialPosition
         
         # Possible directions for the robot to face assuming 90 degree turns
         # (to keep it simple for now)
         self.directionOptions = [[0,-1],[-1,0],[0,1],[1,0]]
         
         # Index of the initial direction that the robot is facing
-        self.directionIndex = 0
+        self.initialDirectionIndex = 0
+        self.directionIndex = self.initialDirectionIndex
+
+        # Double check that the robot is on the path
+        onPath = self.checkOnPath()
+        if (onPath == False):
+            print("Something went wrong with setting up the robot")
         
     # Return the direction that the robot is facing
     def getDirection(self):
@@ -65,24 +72,26 @@ class VirtualMap:
     # A way for the robot to look for the path by moving around in circles 
     # until it finds a spot that is on the path
     def getToPath(self):
-        movementsToTake = 1
-        movementsTaken = 0
-        numTurnsTaken = 0
+        self.position = self.initialPosition
+        self.directionIndex = self.initialDirectionIndex
+        # movementsToTake = 1
+        # movementsTaken = 0
+        # numTurnsTaken = 0
         
-        while (not self.checkOnPath()):
-            if movementsTaken <= movementsToTake:
-                self.move()
-                movementsTaken += 1
-            else:
-                self.turn(1)
-                self.move()
-                movementsTaken = 1
-                movementsToTake += 1
-                numTurnsTaken += 1
-                if numTurnsTaken >= 2:
-                    numTurnsTaken = 0
-                    movementsToTake += 1
-        print(self.position)
+        # while (not self.checkOnPath()):
+        #     if movementsTaken <= movementsToTake:
+        #         self.move()
+        #         movementsTaken += 1
+        #     else:
+        #         self.turn(1)
+        #         self.move()
+        #         movementsTaken = 1
+        #         movementsToTake += 1
+        #         numTurnsTaken += 1
+        #         if numTurnsTaken >= 2:
+        #             numTurnsTaken = 0
+        #             movementsToTake += 1
+        # print(self.position)
         
         
     def getPostPoint(self):
@@ -90,7 +99,7 @@ class VirtualMap:
         for location in self.nodeLocations:
             if self.nodeLocations[location] == self.position:
                 return location
-            
+                    
         # If no location code was found
         return -1
         
@@ -98,11 +107,12 @@ class VirtualMap:
     # Check if the robot is on the path (is it between two connected lcations
     # on the map?)
     def checkOnPath(self):
+        pathGood = False
         
         # Deal with the special case where the robot is at a post point
         # If you are then you are on the path
         if (self.getPostPoint() != -1):
-            return True
+            pathGood = True
         
         # Check if we are between two connected points
         else:
@@ -112,11 +122,15 @@ class VirtualMap:
                     postB = item[0]
                     b = self.nodeLocations[postB]
                     if self.isBetween(a, b):
-                        return True
+                        pathGood = True
+        
+        if pathGood == True:
+            self.lastGoodPosition = self.position
+            self.lastGoodDirectionIndex = self.directionIndex
         
         # If we are not between two connected points, and we are not at a post
         # point, we are off the path
-        return False
+        return pathGood
     
     # Check if th erobot is between a and b
     def isBetween(self, a,b):
