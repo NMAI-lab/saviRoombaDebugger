@@ -36,16 +36,10 @@ def sendDirection(data, args):
 
 
 # Set destination action
-def doAction(data, args):
+def setDestination(data, args):
     (searcher) = args
-    
-    # Extract the message
-    data = data.data
-
-    if "setDestination" in data:
-        dest = re.search(r'\((.*?)\)',data).group(1)
-        rospy.loginfo("Setting destination to " + dest)
-        searcher.setDestination(dest)
+    destination = data.data
+    searcher.setDestination(destination)
 
 # Main program
 def rosMain():
@@ -56,7 +50,7 @@ def rosMain():
     rospy.init_node('navigator', anonymous=True)
 
     # Subscribe to actions, watch for setDest messages
-    rospy.Subscriber('actions', String, doAction, (searcher))
+    rospy.Subscriber('setDestination', String, setDestination, (searcher))
 
     # Setup the publisher for the result
     publisher = rospy.Publisher('perceptions', String, queue_size=10)
