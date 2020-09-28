@@ -265,7 +265,7 @@ destination(LOCATION,LOCATION,left) :-
  // Case where the robot has not yet set a destination to navigate to. Need to 
  // set the destination.
 +!goTo(LOCATION,_)
-	:	destination(unknown,_)
+	:	direction(unknown,_)
 	<-	.broadcast(tell, navigationUpdate(setDestination,LOCATION));
 		+setDestination(LOCATION);	// Make a mental note that the destination has been set
 		setDestination(LOCATION);	// Set the destination in the navigation module
@@ -273,7 +273,7 @@ destination(LOCATION,LOCATION,left) :-
 
  // The robot has a different destination than the one we need to go to.
  +!goTo(LOCATION,_)
-	:	destination(OLD,_) &
+	:	direction(OLD,_) &
 		(not (OLD = LOCATION))
 	<-	.broadcast(tell, navigationUpdate(updateDestination,LOCATION));
 		-setDestination(_);			// Remove old mental note about destination
@@ -283,14 +283,14 @@ destination(LOCATION,LOCATION,left) :-
 		
 // Case where the robot has arrived at the destination.
 +!goTo(LOCATION,_)
-	:	destination(LOCATION,arrived)
+	:	direction(LOCATION,arrived)
 	<-	.broadcast(tell, navigationUpdate(arrived));
 		-setDestination(LOCATION);	// Remove old mental note about destination
 		drive(stop).
 	
 // Destination is behind us: turn and start following the path.
 +!goTo(LOCATION,_)
-	:	destination(LOCATION,behind)
+	:	direction(LOCATION,behind)
 	<-	.broadcast(tell, navigationUpdate(behind));
 		turn(left);
 		!followPath;
@@ -298,7 +298,7 @@ destination(LOCATION,LOCATION,left) :-
 		
 // Destiantion is forward. Drive forward, follow the path.
 +!goTo(LOCATION,_)
-	:	destination(LOCATION,forward)
+	:	direction(LOCATION,forward)
 	<-	.broadcast(tell, navigationUpdate(forward));
 		drive(forward);
 		!followPath;
@@ -306,7 +306,7 @@ destination(LOCATION,LOCATION,left) :-
 
 // Destiantion is either left or right. Turn and then follow the path.
 +!goTo(LOCATION,_)
-	:	destination(LOCATION,DIRECTION) &
+	:	direction(LOCATION,DIRECTION) &
 		((DIRECTION = left) | (DIRECTION = right))
 	<-	.broadcast(tell, navigationUpdate(DIRECTION));
 		turn(DIRECTION);

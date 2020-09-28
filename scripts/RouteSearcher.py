@@ -107,7 +107,7 @@ class RouteSearcher(AStar):
             return "direction(" + str(self.destination) + ",arrived)"
     
         # Deal with special case where there is no previous location
-        if previous == -1:
+        if (previous == -1) or ("unknown" in previous):
             # Try straight ahead, no other way to know what direction you are facing
             # TODO: Investigate if there are alternatives to this (perhaps pick something from the graph at random)
             return "direction(" + str(self.destination) + ",forward)"  
@@ -133,7 +133,7 @@ class RouteSearcher(AStar):
         
         # Case where it is more or less the the right
         elif (bearing >= (90-45)) and (bearing < (90+45)):
-            return "direction(" + str(self.destination) + ",direction(right)"
+            return "direction(" + str(self.destination) + ",right)"
         
         # Case where it is more or less behind
         elif (bearing >= (180-45)) and (bearing < (180+45)):
