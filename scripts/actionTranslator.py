@@ -5,14 +5,14 @@ import re
 from std_msgs.msg import String
 from std_msgs.msg import Empty
 from geometry_msgs.msg import Twist
-from driverLineSensor import getLine
+#rom driverLineSensor import getLine
 
 # Decode and execute the action
 def decodeAction(data, args):
     
     # Get the parameters
     action = str(data.data)
-    (drivePublisher, dockPublisher, undockPublisher) = args
+    (drivePublisher, dockPublisher, undockPublisher, destinationPublisher) = args
     rospy.loginfo("Action: " + action)
     
     # Handle the docking station cases
@@ -34,6 +34,10 @@ def decodeAction(data, args):
     elif re.search("turn", action):
         turn(drivePublisher,parameter)
     
+    # Deal with passing setDestination action to the appropriate topic
+    elif re.search("setDestination", action):
+        destinationPublisher.publish(parameter)
+    
     # Deal with invalid action
     else:
         rospy.loginfo("Invalid action ignored")
@@ -45,8 +49,8 @@ def turn(publisher, parameter):
     drive(publisher,parameter)
     
     # Keep turning until the line is centered again
-    while getLine()[0] != "c":
-            drive(publisher,parameter)
+    #while getLine()[0] != "c":
+    #        drive(publisher,parameter)
             
     # Stop, once the line is centered again
     drive(publisher, "stop")
@@ -84,8 +88,9 @@ def rosMain():
     drivePublisher = rospy.Publisher('cmd_vel', Twist, queue_size=10)
     dockPublisher = rospy.Publisher('dock', Empty, queue_size=10)
     undockPublisher = rospy.Publisher('undock', Empty, queue_size=10)
+    destinationPublisher = rospy.Publisher('setDestination', String, queue_size=10)
     rospy.init_node('actionTranslator', anonymous=True)
-    rospy.Subscriber('actions', String, decodeAction, (drivePublisher, dockPublisher, undockPublisher))
+    rospy.Subscriber('actions', String, decodeAction, (drivePublisher, dockPublisher, undockPublisher, destinationPublisher))
     rospy.spin()
 
 # Start things up

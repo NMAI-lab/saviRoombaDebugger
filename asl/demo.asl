@@ -6,7 +6,7 @@
 /**
  * Navigation rules
  * TODO: Replace with navigation module
- */
+ *
 
 // Destination has not yet been set
 destination(LOCATION,unknown,unknown) :-
@@ -115,7 +115,8 @@ destination(LOCATION,LOCATION,left) :-
 	CURRENT = post3 &
 	PAST = post2 &
 	LOCATION = post5.
-	
+*/
+
 /**
  * +battery(low)
  * When the battery(low) perception is received, we need to pickup the goal
@@ -264,29 +265,32 @@ destination(LOCATION,LOCATION,left) :-
  // Case where the robot has not yet set a destination to navigate to. Need to 
  // set the destination.
 +!goTo(LOCATION,_)
-	:	destination(_,unknown,_)
+	:	direction(unknown,_)
 	<-	.broadcast(tell, navigationUpdate(setDestination,LOCATION));
-		+setDestination(LOCATION);	// **** Remove + for navigation module
+		+setDestination(LOCATION);	// Make a mental note that the destination has been set
+		setDestination(LOCATION);	// Set the destination in the navigation module
 		!goTo(LOCATION,1).
 
  // The robot has a different destination than the one we need to go to.
  +!goTo(LOCATION,_)
-	:	destination(LOCATION,old,_)
+	:	direction(OLD,_) &
+		(not (OLD = LOCATION))
 	<-	.broadcast(tell, navigationUpdate(updateDestination,LOCATION));
-		-setDestination(_);
-		+setDestination(LOCATION);	// **** Remove + for navigation module
+		-setDestination(_);			// Remove old mental note about destination
+		+setDestination(LOCATION);	// Make a mental note that the destination has been set
+		setDestination(LOCATION);	// Set the destination in the navigation module
 		!goTo(LOCATION,1).
 		
 // Case where the robot has arrived at the destination.
 +!goTo(LOCATION,_)
-	:	destination(LOCATION,LOCATION,arrived)
+	:	direction(LOCATION,arrived)
 	<-	.broadcast(tell, navigationUpdate(arrived));
-		-setDestination(LOCATION);		// **** TODO: Update navigation module actions ****
+		-setDestination(LOCATION);	// Remove old mental note about destination
 		drive(stop).
 	
 // Destination is behind us: turn and start following the path.
 +!goTo(LOCATION,_)
-	:	destination(LOCATION,LOCATION,behind)
+	:	direction(LOCATION,behind)
 	<-	.broadcast(tell, navigationUpdate(behind));
 		turn(left);
 		!followPath;
@@ -294,7 +298,7 @@ destination(LOCATION,LOCATION,left) :-
 		
 // Destiantion is forward. Drive forward, follow the path.
 +!goTo(LOCATION,_)
-	:	destination(LOCATION,LOCATION,forward)
+	:	direction(LOCATION,forward)
 	<-	.broadcast(tell, navigationUpdate(forward));
 		drive(forward);
 		!followPath;
@@ -302,7 +306,7 @@ destination(LOCATION,LOCATION,left) :-
 
 // Destiantion is either left or right. Turn and then follow the path.
 +!goTo(LOCATION,_)
-	:	destination(LOCATION,LOCATION,DIRECTION) &
+	:	direction(LOCATION,DIRECTION) &
 		((DIRECTION = left) | (DIRECTION = right))
 	<-	.broadcast(tell, navigationUpdate(DIRECTION));
 		turn(DIRECTION);

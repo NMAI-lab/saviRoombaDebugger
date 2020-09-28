@@ -100,16 +100,17 @@ class RouteSearcher(AStar):
     def getNextDirection(self, previous, current):
         # Deal with the special case where there is no destination set
         if self.destination == -1:
-            return "direction(none)"
+            return "direction(unknown,unknown)"
         
         # Deal with special case where we are already at the destination
         if current == self.destination:
-            return "direction(arrived)"
+            return "direction(" + str(self.destination) + ",arrived)"
     
         # Deal with special case where there is no previous location
-        if previous == -1:
-            return "direction(forward)"  # Try straight ahead, no other way to know what direction you are facing
-                                    # TODO: Investigate if there are alternatives to this (perhaps pick something from the graph at random)
+        if (previous == -1) or ("unknown" in previous):
+            # Try straight ahead, no other way to know what direction you are facing
+            # TODO: Investigate if there are alternatives to this (perhaps pick something from the graph at random)
+            return "direction(" + str(self.destination) + ",forward)"  
         
         solutionPath = list(self.astar(current,self.destination))
         bearing = self.getNextTurnAngle(solutionPath, previous)
@@ -128,19 +129,19 @@ class RouteSearcher(AStar):
 
         # Case where it is more or less straight ahead
         if ((bearing >= (360 - 45)) or (bearing < 45)):
-            return "direction(forward)"
+            return "direction(" + str(self.destination) + ",forward)"
         
         # Case where it is more or less the the right
         elif (bearing >= (90-45)) and (bearing < (90+45)):
-            return "direction(right)"
+            return "direction(" + str(self.destination) + ",right)"
         
         # Case where it is more or less behind
         elif (bearing >= (180-45)) and (bearing < (180+45)):
-            return "direction(behind)"
+            return "direction(" + str(self.destination) + ",behind)"
         
         # Case where it is more or less to the left (all that is left)
         else:
-            return "direction(left)"
+            return "direction(" + str(self.destination) + ",left)"
         
     def setDestination(self, destination):
         if destination == -1:
