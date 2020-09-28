@@ -5,7 +5,7 @@ import re
 from std_msgs.msg import String
 from std_msgs.msg import Empty
 from geometry_msgs.msg import Twist
-from driverLineSensor import getLine
+#rom driverLineSensor import getLine
 
 # Decode and execute the action
 def decodeAction(data, args):
@@ -49,8 +49,8 @@ def turn(publisher, parameter):
     drive(publisher,parameter)
     
     # Keep turning until the line is centered again
-    while getLine()[0] != "c":
-            drive(publisher,parameter)
+    #while getLine()[0] != "c":
+    #        drive(publisher,parameter)
             
     # Stop, once the line is centered again
     drive(publisher, "stop")
