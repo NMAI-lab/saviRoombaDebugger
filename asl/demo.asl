@@ -198,7 +198,7 @@ destination(LOCATION,LOCATION,left) :-
  */
 +!collectAndDeliverMail(SENDER,RECEIVER)
 	:	(not charging)
-	<-	+mailMission(SENDER,RECEIVER)
+	<-	+mailMission(SENDER,RECEIVER);
 		.broadcast(tell, mailUpdate(receivedMission,SENDER,RECEIVER));
 		!collectMail(SENDER);
 		.broadcast(tell, mailUpdate(gotMail,SENDER,RECEIVER));
