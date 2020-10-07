@@ -267,7 +267,7 @@ destination(LOCATION,LOCATION,left) :-
 +!goTo(LOCATION,_)
 	:	direction(unknown,_)
 	<-	.broadcast(tell, navigationUpdate(setDestination,LOCATION));
-		+setDestination(LOCATION);	// Make a mental note that the destination has been set
+		//+setDestination(LOCATION);	// Make a mental note that the destination has been set
 		setDestination(LOCATION);	// Set the destination in the navigation module
 		!goTo(LOCATION,1).
 
@@ -276,8 +276,8 @@ destination(LOCATION,LOCATION,left) :-
 	:	direction(OLD,_) &
 		(not (OLD = LOCATION))
 	<-	.broadcast(tell, navigationUpdate(updateDestination,LOCATION));
-		-setDestination(_);			// Remove old mental note about destination
-		+setDestination(LOCATION);	// Make a mental note that the destination has been set
+		//-setDestination(_);			// Remove old mental note about destination
+		//+setDestination(LOCATION);	// Make a mental note that the destination has been set
 		setDestination(LOCATION);	// Set the destination in the navigation module
 		!goTo(LOCATION,1).
 		
@@ -285,7 +285,7 @@ destination(LOCATION,LOCATION,left) :-
 +!goTo(LOCATION,_)
 	:	direction(LOCATION,arrived)
 	<-	.broadcast(tell, navigationUpdate(arrived));
-		-setDestination(LOCATION);	// Remove old mental note about destination
+		//-setDestination(LOCATION);	// Remove old mental note about destination
 		drive(stop).
 	
 // Destination is behind us: turn and start following the path.
