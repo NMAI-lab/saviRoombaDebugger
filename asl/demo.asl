@@ -202,7 +202,7 @@ destination(LOCATION,LOCATION,left) :-
 		.broadcast(tell, mailUpdate(receivedMission,SENDER,RECEIVER));
 		!collectMail(SENDER);
 		.broadcast(tell, mailUpdate(gotMail,SENDER,RECEIVER));
-		!deliverMail(RECEIVER)
+		!deliverMail(RECEIVER);
 		.broadcast(tell, mailUpdate(delivered,RECEIVER));
 		-mailMission(SENDER,RECEIVER).
 
