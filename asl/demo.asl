@@ -354,7 +354,7 @@ destination(LOCATION,LOCATION,left) :-
 // Handle cases for left and right turns.
 +!followPath
 	:	line(DIRECTION) & 
-		((DIRECTION = left) | (DIURECTION = right)) &
+		((DIRECTION = left) | (DIRECTION = right)) &
 		(not postPoint(_,_))
 	<-	.broadcast(tell, followPath(DIRECTION));
 		drive(DIRECTION);
